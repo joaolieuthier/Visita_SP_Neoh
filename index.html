@@ -603,9 +603,6 @@
             <th scope="col">Cargo / função</th>
             <th scope="col">Contato celular</th>
             <th scope="col">Contato e-mail</th>
-            <th scope="col">Canal preferido</th>
-            <th scope="col">Responsável interno</th>
-            <th scope="col">Local exato confirmado</th>
             <th scope="col">Status da confirmação</th>
             <th scope="col">Última atualização</th>
             <th scope="col">Observações</th>
@@ -962,9 +959,9 @@
     {localId:"hcor", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Fernando Bicudo"},
     {localId:"hev", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
     {localId:"bos", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria"},
-    {localId:"evangelico", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria", localPendentePorPadrao:true},
+    {localId:"evangelico", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria"},
     {localId:"unimedSorocaba", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria"},
-    {localId:"unimedSaltoItu", prioridade:"encaixe", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla", localPendentePorPadrao:true},
+    {localId:"unimedSaltoItu", prioridade:"encaixe", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
     {localId:"pucCampinas", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
     {localId:"unimedCampinas", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
     {localId:"unimedLimeira", prioridade:"encaixe", cenarios:"C2 (encaixe opcional)", responsavelSugerido:"João / Ana Carla"}
@@ -978,13 +975,7 @@
     {valor:"reagendamento", rotulo:"Reagendamento solicitado", classe:"status-reagendamento"},
     {valor:"recusado", rotulo:"Recusado", classe:"status-recusado"}
   ];
-  var CANAL_OPCOES = ["Não definido", "WhatsApp", "E-mail", "Telefone", "Comercial/CRM"];
   var RESPONSAVEL_OPCOES = ["João", "Ana Carla", "Carla Maria", "Fernando Bicudo", "Comercial"];
-  var LOCAL_CONFIRMADO_OPCOES = [
-    {valor:"a-confirmar", rotulo:"A confirmar"},
-    {valor:"pendente", rotulo:"Pendente"},
-    {valor:"sim", rotulo:"Sim"}
-  ];
 
   function carregarChecklistSalvo(){
     try{
@@ -1007,9 +998,6 @@
       cargo: salvo.cargo || "",
       celular: salvo.celular || "",
       email: salvo.email || "",
-      canal: salvo.canal || CANAL_OPCOES[0],
-      responsavel: salvo.responsavel || item.responsavelSugerido,
-      localConfirmado: salvo.localConfirmado || (item.localPendentePorPadrao ? "pendente" : "a-confirmar"),
       status: salvo.status || "pendente",
       ultimaAtualizacao: salvo.ultimaAtualizacao || "",
       observacoes: salvo.observacoes || ""
@@ -1094,9 +1082,6 @@
         '<td><input type="text" data-campo="cargo" value="' + estado.cargo + '" aria-label="Cargo do contato em ' + loc.nome + '" placeholder="Cargo/função"></td>' +
         '<td><input type="tel" data-campo="celular" value="' + estado.celular + '" aria-label="Celular do contato em ' + loc.nome + '" placeholder="(11) 90000-0000"></td>' +
         '<td><input type="email" data-campo="email" value="' + estado.email + '" aria-label="E-mail do contato em ' + loc.nome + '" placeholder="nome@hospital.com.br"></td>' +
-        '<td><select data-campo="canal" aria-label="Canal preferido de confirmação em ' + loc.nome + '">' + optionsHTML(CANAL_OPCOES, estado.canal, false) + '</select></td>' +
-        '<td><select data-campo="responsavel" aria-label="Responsável interno pelo contato em ' + loc.nome + '">' + optionsHTML(RESPONSAVEL_OPCOES, estado.responsavel, false) + '</select></td>' +
-        '<td><select data-campo="localConfirmado" aria-label="Local exato confirmado em ' + loc.nome + '">' + optionsHTML(LOCAL_CONFIRMADO_OPCOES, estado.localConfirmado, true) + '</select></td>' +
         '<td><select class="status-select ' + STATUS_OPCOES.find(function(s){return s.valor===estado.status;}).classe + '" data-campo="status" aria-label="Status da confirmação em ' + loc.nome + '">' + optionsHTML(STATUS_OPCOES, estado.status, true) + '</select></td>' +
         '<td class="marca-tempo" data-campo-display="ultimaAtualizacao">' + (estado.ultimaAtualizacao || "—") + '</td>' +
         '<td><input type="text" data-campo="observacoes" value="' + estado.observacoes + '" aria-label="Observações sobre ' + loc.nome + '" placeholder="Observações"></td>';
@@ -1121,7 +1106,7 @@
   }
 
   function exportarChecklistCSV(){
-    var cabecalho = ["Prioridade","Hospital/Cliente","Cidade","Cenario(s)","Nome do contato","Cargo/funcao","Celular","E-mail","Canal preferido","Responsavel interno","Local exato confirmado","Status","Ultima atualizacao","Observacoes"];
+    var cabecalho = ["Prioridade","Hospital/Cliente","Cidade","Cenario(s)","Nome do contato","Cargo/funcao","Celular","E-mail","Status","Ultima atualizacao","Observacoes"];
     function escaparCSV(v){
       v = String(v == null ? "" : v);
       if(/[",;\n]/.test(v)){ v = '"' + v.replace(/"/g, '""') + '"'; }
@@ -1132,12 +1117,11 @@
       var loc = LOCAIS[item.localId];
       var estado = estadoLinha(item);
       var statusRotulo = STATUS_OPCOES.find(function(s){ return s.valor === estado.status; }).rotulo;
-      var localRotulo = LOCAL_CONFIRMADO_OPCOES.find(function(s){ return s.valor === estado.localConfirmado; }).rotulo;
       linhas.push([
         item.prioridade === "prioritario" ? "Prioritário" : "Encaixe",
         loc.nome, loc.cidade, item.cenarios,
-        estado.nomeContato, estado.cargo, estado.celular, estado.email, estado.canal, estado.responsavel,
-        localRotulo, statusRotulo, estado.ultimaAtualizacao, estado.observacoes
+        estado.nomeContato, estado.cargo, estado.celular, estado.email,
+        statusRotulo, estado.ultimaAtualizacao, estado.observacoes
       ].map(escaparCSV).join(";"));
     });
     var csv = "﻿" + linhas.join("\r\n");
