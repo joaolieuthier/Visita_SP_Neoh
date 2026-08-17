@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planejamento de visitas a clientes — Intelectah</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+  :root{
+    --azul: #173A5E;
+    --verde: #19AFA3;
+    --bg: #FFFFFF;
+    --bg2: #F4F6F9;
+    --azul-claro: #EAF0F6;
+    --verde-claro: #E8F7F5;
+    --texto: #22313F;
+    --texto2: #647482;
+    --alerta: #B8860B;
+    --borda: #D7DEE6;
+    --marcador-cliente: #2E6DA4;
+    --marcador-hotel: #19AFA3;
+    --marcador-aeroporto: #E07B1A;
+    --marcador-mef: #7A4FA3;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: Inter, Arial, Helvetica, sans-serif;
+    background: var(--bg2);
+    color: var(--texto);
+    line-height: 1.5;
+    font-size: 15px;
+  }
+  a{color: var(--azul);}
+  h1,h2,h3,h4{color: var(--azul); margin: 0 0 8px 0;}
+  .skip-link{position:absolute;left:-999px;top:0;background:var(--azul);color:#fff;padding:8px 12px;z-index:200;}
+  .skip-link:focus{left:8px;top:8px;}
+
+  header.topo{
+    background: #fff;
+    border-bottom: 3px solid var(--verde);
+    padding: 8px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(23,58,94,0.10);
+  }
+  .cabecalho-flex{
+    max-width: 1200px;
+    margin: 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .marca-grupo{display:flex; align-items:center; gap:12px;}
+  .logo-intelectah{height:32px; width:auto; display:block;}
+  .titulo-grupo{border-left:1px solid var(--borda); padding-left:12px;}
+  header.topo h1{color:var(--azul); font-size: 15px; margin: 0; line-height:1.2;}
+  header.topo .subtitulo{font-size: 11.5px; color: var(--texto2); margin: 2px 0 0 0; line-height:1.3;}
+  header.topo .acoes-topo{display:flex; gap:8px; flex-wrap:wrap;}
+  header.topo .acoes-topo .btn-acao{padding:6px 12px; font-size:12px;}
+  @media (max-width: 560px){
+    .titulo-grupo{border-left:none; padding-left:0;}
+    .marca-grupo{flex-wrap:wrap;}
+  }
+
+  main{max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px;}
+
+  section{margin-bottom: 28px;}
+
+  .caixa-recomendacao{
+    background: var(--verde-claro);
+    border: 1px solid var(--verde);
+    border-left: 6px solid var(--verde);
+    border-radius: 6px;
+    padding: 18px 20px;
+  }
+  .caixa-recomendacao h2{font-size:16px; margin-bottom:8px; display:flex; align-items:center; gap:8px;}
+  .selo{
+    display:inline-block;
+    background: var(--verde);
+    color:#fff;
+    font-size: 11px;
+    font-weight:700;
+    letter-spacing: 0.5px;
+    padding: 3px 9px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .caixa-recomendacao ul{margin: 6px 0 0 0; padding-left: 20px;}
+  .caixa-recomendacao li{margin-bottom: 4px;}
+
+  .caixa-alerta{
+    background: #FBF3DF;
+    border: 1px solid var(--alerta);
+    border-left: 6px solid var(--alerta);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .caixa-alerta strong{color: var(--alerta);}
+
+  .caixa-info{
+    background: var(--azul-claro);
+    border: 1px solid var(--borda);
+    border-left: 6px solid var(--azul);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  h2.titulo-secao{
+    font-size: 18px;
+    border-bottom: 2px solid var(--verde);
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+  }
+
+  /* Cards de comparação */
+  .cards-comparativo{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .card-cenario{
+    background:#fff;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: var(--texto);
+    position: relative;
+    transition: box-shadow .15s ease, border-color .15s ease;
+  }
+  .card-cenario:hover, .card-cenario:focus-visible{
+    box-shadow: 0 2px 10px rgba(23,58,94,0.15);
+    border-color: var(--verde);
+    outline: none;
+  }
+  .card-cenario[aria-pressed="true"]{
+    border-color: var(--verde);
+    background: var(--verde-claro);
+  }
+  .card-cenario h3{font-size:15px; margin-bottom:6px;}
+  .card-cenario .periodo{font-size:13px; color: var(--texto2); margin-bottom:8px;}
+  .card-cenario .parecer{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing:0.4px;
+  }
+  .parecer.recomendado{background: var(--verde); color:#fff;}
+  .parecer.alternativa{background: var(--azul-claro); color: var(--azul); border:1px solid var(--azul);}
+  .parecer.condicionado{background: #FBF3DF; color: var(--alerta); border:1px solid var(--alerta);}
+
+  table{
+    width:100%;
+    border-collapse: collapse;
+    background:#fff;
+    font-size: 13.5px;
+  }
+  caption{text-align:left; font-size:12px; color:var(--texto2); padding-bottom:6px;}
+  th,td{
+    border: 1px solid var(--borda);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th{background: var(--azul-claro); color: var(--azul); font-weight:700;}
+  .tabela-scroll{overflow-x:auto; border-radius:6px;}
+  tr.linha-destaque{background: var(--verde-claro) !important;}
+  tr[data-leg]{cursor:pointer;}
+  tr[data-leg]:hover{background: var(--azul-claro);}
+
+  .badge-risco{font-size:11px; font-weight:700; padding:2px 7px; border-radius:3px; text-transform:uppercase;}
+  .badge-risco.baixo{background:var(--verde-claro); color:#0E7C72;}
+  .badge-risco.moderado{background:#FBF3DF; color:var(--alerta);}
+  .badge-risco.alto{background:#FBE4E1; color:#A23B2E;}
+
+  /* Navegação de cenários */
+  .nav-cenarios{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--borda);
+  }
+  .aba-cenario{
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texto2);
+    cursor: pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .aba-cenario[aria-selected="true"]{
+    color: var(--azul);
+    border-bottom-color: var(--verde);
+  }
+  .aba-cenario:focus-visible{outline: 2px solid var(--verde); outline-offset:2px;}
+
+  .painel-cenario{
+    background:#fff;
+    border:1px solid var(--borda);
+    border-radius:8px;
+    padding: 20px;
+  }
+  .painel-cenario .cabecalho-cenario{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom: 14px;
+  }
+  .painel-cenario .cabecalho-cenario h3{font-size:19px; margin-bottom:4px;}
+  .painel-cenario .circuito{color: var(--texto2); font-size:13.5px;}
+
+  .grid-resumo{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .item-resumo{
+    background: var(--bg2);
+    border:1px solid var(--borda);
+    border-radius:6px;
+    padding: 10px 12px;
+  }
+  .item-resumo .rotulo{font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:var(--texto2); font-weight:700; margin-bottom:3px;}
+  .item-resumo .valor{font-size:14px;}
+
+  h4.subsecao{
+    font-size:15px;
+    color:var(--azul);
+    margin: 22px 0 10px 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--borda);
+  }
+  h4.subsecao:first-of-type{border-top:none; padding-top:0; margin-top:0;}
+
+  /* Timeline da agenda */
+  .timeline{list-style:none; margin:0; padding:0;}
+  .dia-timeline{
+    border:1px solid var(--borda);
+    border-radius:6px;
+    margin-bottom:10px;
+    overflow:hidden;
+  }
+  .dia-timeline summary{
+    list-style:none;
+    cursor:pointer;
+    padding: 10px 14px;
+    background: var(--azul-claro);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-weight:700;
+    color: var(--azul);
+  }
+  .dia-timeline summary::-webkit-details-marker{display:none;}
+  .dia-timeline summary .seta{transition: transform .15s ease; font-size:12px;}
+  .dia-timeline[open] summary .seta{transform: rotate(90deg);}
+  .dia-timeline .corpo-dia{padding: 12px 14px; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:12px;}
+  .bloco-periodo .rotulo{font-size:11px; text-transform:uppercase; color:var(--texto2); font-weight:700; margin-bottom:4px;}
+  .bloco-periodo .atividade{margin-bottom:6px; font-size:13.5px;}
+  .bloco-periodo .atividade .horario{color:var(--verde); font-weight:700;}
+  .translado-dia{
+    grid-column: 1 / -1;
+    background: var(--bg2);
+    border-radius:5px;
+    padding: 8px 10px;
+    font-size:13px;
+    color:var(--texto2);
+    border-left: 3px solid var(--verde);
+  }
+  .tag-pendente{background:#FBF3DF; color:var(--alerta); font-size:10.5px; font-weight:700; padding:1px 6px; border-radius:3px; margin-left:6px; text-transform:uppercase;}
+  .btn-toggle-todos{
+    background:none; border:1px solid var(--azul); color:var(--azul);
+    padding:6px 12px; border-radius:5px; font-size:12.5px; cursor:pointer; margin-bottom:10px;
+  }
+
+  /* Mapa */
+  .mapa-toolbar{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .btn-mapa{
+    background:#fff;
+    border:1px solid var(--azul);
+    color:var(--azul);
+    padding:7px 12px;
+    border-radius:5px;
+    font-size:12.5px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .btn-mapa[aria-pressed="true"]{background:var(--azul); color:#fff;}
+  .btn-mapa:hover{background:var(--azul-claro);}
+  .btn-mapa[aria-pressed="true"]:hover{background:var(--azul);}
+  .mapa-container-el{
+    height: 440px;
+    border-radius: 6px;
+    border: 1px solid var(--borda);
+    position: relative;
+  }
+  .mapa-container-el.expandido{
+    position: fixed;
+    inset: 16px;
+    height: auto;
+    z-index: 500;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.3);
+  }
+  .mapa-el{width:100%; height:100%; border-radius:6px; background:#E9EDF1;}
+  .legenda-mapa{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    font-size:12.5px;
+    margin-top:8px;
+    color: var(--texto2);
+  }
+  .legenda-mapa span{display:flex; align-items:center; gap:5px;}
+  .ponto-legenda{width:11px; height:11px; border-radius:50%; display:inline-block; border: 1px solid rgba(0,0,0,0.25);}
+  .fallback-mapa{
+    display:none;
+    background: var(--bg2);
+    border: 1px dashed var(--texto2);
+    border-radius:6px;
+    padding: 18px;
+    font-size:13.5px;
+    color: var(--texto2);
+  }
+  .popup-leaflet-custom{font-size:13px; max-width:230px;}
+  .popup-leaflet-custom h4{margin:0 0 4px 0; font-size:13.5px; color:var(--azul);}
+  .popup-leaflet-custom .aviso-aprox{color:var(--alerta); font-weight:700; font-size:11px; display:block; margin:4px 0;}
+  .popup-leaflet-custom a{font-size:12px;}
+
+  /* Hotéis */
+  .cards-hoteis{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
+    gap:14px;
+  }
+  .card-hotel{
+    border:1px solid var(--borda);
+    border-radius:8px;
+    padding:14px;
+    background: var(--bg2);
+  }
+  .card-hotel.referencia{border-color:var(--verde); background:var(--verde-claro);}
+  .card-hotel h4{font-size:14.5px; margin-bottom:6px;}
+  .card-hotel .linha{font-size:13px; margin-bottom:4px;}
+  .card-hotel .linha .rotulo{color:var(--texto2); font-weight:700;}
+  .card-hotel .btn-link{
+    display:inline-block; margin-top:8px; font-size:12.5px;
+    background:var(--azul); color:#fff; padding:6px 10px; border-radius:5px; text-decoration:none;
+  }
+  .card-hotel .btn-link:hover{background:#0f2c47;}
+
+  /* Avaliação executiva */
+  .grid-avaliacao{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    gap:14px;
+  }
+  .col-avaliacao{
+    border:1px solid var(--borda);
+    border-radius:8px;
+    padding:14px;
+    background:#fff;
+  }
+  .col-avaliacao h5{margin:0 0 8px 0; font-size:13.5px; color:var(--azul); text-transform:uppercase; letter-spacing:0.3px;}
+  .col-avaliacao ul{margin:0; padding-left:18px; font-size:13.5px;}
+  .col-avaliacao li{margin-bottom:6px;}
+  .col-avaliacao.favoravel{border-left:4px solid var(--verde);}
+  .col-avaliacao.atencao{border-left:4px solid var(--alerta);}
+  .col-avaliacao.risco{border-left:4px solid #A23B2E;}
+  .col-avaliacao.dependencia{border-left:4px solid var(--azul);}
+  .condicao-aprovacao{
+    margin-top:14px;
+    background: var(--azul-claro);
+    border-radius:6px;
+    padding:12px 14px;
+    font-size:13.5px;
+  }
+  .condicao-aprovacao .rotulo{font-weight:700; color:var(--azul); display:block; margin-bottom:4px; text-transform:uppercase; font-size:11.5px;}
+
+  .acoes-globais{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;}
+  .btn-acao{
+    background:var(--azul); color:#fff; border:none; padding:9px 16px;
+    border-radius:6px; font-size:13.5px; cursor:pointer; font-family:inherit;
+  }
+  .btn-acao.secundario{background:#fff; color:var(--azul); border:1px solid var(--azul);}
+  .btn-acao:hover{opacity:0.9;}
+
+  .aviso-tempo{font-size:12.5px; color:var(--texto2); background:var(--bg2); border-radius:5px; padding:8px 12px; margin-top:10px;}
+
+  /* Checklist de confirmação */
+  .resumo-checklist{
+    display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;
+  }
+  .pill-resumo{
+    background:#fff; border:1px solid var(--borda); border-radius:20px;
+    padding:6px 14px; font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:6px;
+  }
+  .pill-resumo .ponto{width:9px; height:9px; border-radius:50%; display:inline-block;}
+  .checklist-toolbar{
+    display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;
+  }
+  .filtros-status{display:flex; gap:6px; flex-wrap:wrap;}
+  .filtro-btn{
+    background:#fff; border:1px solid var(--borda); color:var(--texto2);
+    padding:5px 11px; border-radius:14px; font-size:12px; cursor:pointer; font-family:inherit;
+  }
+  .filtro-btn[aria-pressed="true"]{background:var(--azul); color:#fff; border-color:var(--azul);}
+  .checklist-acoes{display:flex; gap:8px; flex-wrap:wrap;}
+  #tabela-checklist{font-size:12.5px;}
+  #tabela-checklist input[type="text"],
+  #tabela-checklist input[type="tel"],
+  #tabela-checklist input[type="email"],
+  #tabela-checklist select{
+    width:100%; min-width:120px; border:1px solid var(--borda); border-radius:4px;
+    padding:5px 6px; font-size:12.5px; font-family:inherit; color:var(--texto); background:#fff;
+  }
+  #tabela-checklist input:focus, #tabela-checklist select:focus{outline:2px solid var(--verde); outline-offset:1px;}
+  #tabela-checklist td.col-fixo{background:var(--bg2); font-weight:600;}
+  .selo-prioridade{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:3px; text-transform:uppercase; white-space:nowrap;}
+  .selo-prioridade.prioritario{background:var(--verde-claro); color:#0E7C72;}
+  .selo-prioridade.encaixe{background:#FBF3DF; color:var(--alerta);}
+  .status-select{font-weight:700;}
+  .status-select.status-pendente{color:var(--texto2);}
+  .status-select.status-em-contato{color:var(--alerta);}
+  .status-select.status-confirmado{color:#0E7C72;}
+  .status-select.status-reagendamento{color:#A23B2E;}
+  .status-select.status-recusado{color:#A23B2E;}
+  tr.linha-oculta-filtro{display:none;}
+  .marca-tempo{font-size:11px; color:var(--texto2); white-space:nowrap;}
+  @media print{
+    .checklist-toolbar, .filtros-status{display:none !important;}
+    #tabela-checklist{font-size:10px;}
+    #tabela-checklist input, #tabela-checklist select{border:none; background:transparent; padding:0;}
+  }
+
+  /* Histórico de cenários (colapsável) */
+  .secao-historico{
+    background:#fff; border:1px solid var(--borda); border-radius:8px; margin-bottom:28px; overflow:hidden;
+  }
+  .secao-historico > summary.titulo-historico{
+    list-style:none; cursor:pointer; padding:14px 20px; font-size:16px; font-weight:700; color:var(--azul);
+    display:flex; align-items:center; gap:8px; background:var(--bg2);
+  }
+  .secao-historico > summary.titulo-historico::before{content:"▸"; font-size:13px; transition:transform .15s ease; display:inline-block;}
+  .secao-historico[open] > summary.titulo-historico::before{transform:rotate(90deg);}
+  .secao-historico > summary.titulo-historico::-webkit-details-marker{display:none;}
+  .corpo-historico{padding:18px 20px;}
+
+  .aviso-nao-adotado{
+    background:var(--bg2); border:1px dashed var(--texto2); border-radius:6px;
+    padding:10px 14px; font-size:13px; color:var(--texto2); margin-bottom:14px; font-style:italic;
+  }
+
+  /* Ata de visitas */
+  .lista-ata{display:flex; flex-direction:column; gap:10px;}
+  .cartao-ata{border:1px solid var(--borda); border-radius:6px; overflow:hidden;}
+  .cartao-ata summary{
+    list-style:none; cursor:pointer; padding:10px 14px; background:var(--azul-claro);
+    display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:700; color:var(--azul);
+  }
+  .cartao-ata summary::-webkit-details-marker{display:none;}
+  .cartao-ata .corpo-ata{padding:14px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px;}
+  .cartao-ata .campo-ata{display:flex; flex-direction:column; gap:4px;}
+  .cartao-ata .campo-ata.full{grid-column:1/-1;}
+  .cartao-ata label{font-size:11px; text-transform:uppercase; letter-spacing:0.3px; color:var(--texto2); font-weight:700;}
+  .cartao-ata input, .cartao-ata select, .cartao-ata textarea{
+    border:1px solid var(--borda); border-radius:4px; padding:7px 8px; font-size:13px; font-family:inherit; color:var(--texto); background:#fff; width:100%;
+  }
+  .cartao-ata textarea{min-height:70px; resize:vertical;}
+  .cartao-ata input:focus, .cartao-ata select:focus, .cartao-ata textarea:focus{outline:2px solid var(--verde); outline-offset:1px;}
+  .cartao-ata input:disabled{background:var(--bg2); color:var(--texto2);}
+  .tag-status-ata{font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:3px; text-transform:uppercase; white-space:nowrap;}
+  .tag-status-ata.nao-realizada{background:var(--bg2); color:var(--texto2);}
+  .tag-status-ata.realizada{background:var(--verde-claro); color:#0E7C72;}
+  .tag-status-ata.reagendada{background:#FBF3DF; color:var(--alerta);}
+  .tag-status-ata.cancelada{background:#FBE4E1; color:#A23B2E;}
+  @media print{
+    .cartao-ata{page-break-inside: avoid;}
+    .cartao-ata input, .cartao-ata select, .cartao-ata textarea{border:none; background:transparent; padding:2px 0;}
+  }
+
+  footer.notas-finais{
+    background:#fff; border:1px solid var(--borda); border-radius:8px; padding:18px 20px; font-size:13.5px; color:var(--texto2);
+  }
+  footer.notas-finais h2{font-size:16px;}
+
+  @media (max-width: 720px){
+    header.topo{position: static;}
+    .mapa-container-el{height:340px;}
+    .painel-cenario{padding:14px;}
+  }
+
+  @media print{
+    header.topo{position:static; background:#fff !important; box-shadow:none; border-bottom:2px solid var(--azul);}
+    header.topo h1, header.topo .subtitulo{color:var(--azul) !important;}
+    .acoes-topo, .acoes-globais, .btn-mapa, .mapa-toolbar, .nav-cenarios, .btn-toggle-todos{display:none !important;}
+    body{background:#fff;}
+    main{max-width:100%; padding:0;}
+    .painel-cenario{border:none; padding:0;}
+    .painel-cenario[hidden]{display:block !important;}
+    .dia-timeline{page-break-inside: avoid;}
+    .dia-timeline .corpo-dia{display:grid !important;}
+    .mapa-container-el{height:320px; page-break-inside: avoid;}
+    table{font-size:11px;}
+    section{page-break-inside: avoid;}
+    a.btn-link{display:none;}
+    @page{size: A4; margin: 14mm;}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#conteudo-principal">Ir para o conteúdo principal</a>
+
+<header class="topo">
+  <div class="cabecalho-flex">
+    <div class="marca-grupo">
+      <img class="logo-intelectah" alt="Intelectah — inteligência em gestão hospitalar" src="data:image/png;base64,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">
+      <div class="titulo-grupo">
+        <h1>Planejamento de visitas a clientes</h1>
+        <p class="subtitulo">Cenários agosto/setembro de 2026</p>
+      </div>
+    </div>
+    <div class="acoes-topo">
+      <button class="btn-acao secundario" id="btn-imprimir" type="button">Imprimir / Salvar em PDF</button>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo-principal">
+
+  <section aria-labelledby="titulo-estrategia">
+    <div class="caixa-recomendacao">
+      <h2 id="titulo-estrategia"><span class="selo">Plano confirmado</span></h2>
+      <p>Roteiro adotado: <strong>São Paulo → Sorocaba → Salto/Itu → Campinas → São Paulo</strong>, de <strong>31/08 a 04/09/2026</strong>. Passagens aéreas já emitidas (Congonhas ↔ Recife).</p>
+      <ul>
+        <li>Sete clientes prioritários confirmados no roteiro, mais Unimed Salto/Itu.</li>
+        <li>Atenção operacional: o MV Experience Forum (MEF) ocorre em São Paulo nos dias 02 e 03/09, coincidindo com as visitas a PUC-Campinas e Unimed Campinas — confirmar a disponibilidade dos interlocutores antes da semana da viagem.</li>
+        <li>Este material reúne agenda diária, mapa do roteiro, hospedagens, previsão de deslocamentos, contatos dos clientes e o registro das conversas após cada visita.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="titulo-plano">
+    <h2 class="titulo-secao" id="titulo-plano">Plano de visitas confirmado</h2>
+    <div id="painel-cenario-principal"></div>
+  </section>
+
+  <section aria-labelledby="titulo-checklist">
+    <h2 class="titulo-secao" id="titulo-checklist">Checklist de confirmação dos clientes</h2>
+    <p class="periodo" style="margin-bottom:12px;">Use esta matriz para registrar contatos e atualizações de agenda de cada cliente. Os dados ficam salvos neste navegador (localStorage) — não são enviados a nenhum servidor.</p>
+
+    <div class="resumo-checklist" id="resumo-checklist" role="status" aria-live="polite"></div>
+
+    <div class="checklist-toolbar">
+      <div class="filtros-status" id="filtros-status" role="group" aria-label="Filtrar por status de confirmação"></div>
+      <div class="checklist-acoes">
+        <button type="button" class="btn-acao secundario" id="btn-exportar-csv">Exportar CSV</button>
+        <button type="button" class="btn-acao secundario" id="btn-imprimir-checklist">Imprimir checklist</button>
+        <button type="button" class="btn-acao secundario" id="btn-limpar-checklist">Limpar dados salvos</button>
+      </div>
+    </div>
+
+    <div class="tabela-scroll">
+      <table id="tabela-checklist">
+        <caption>Matriz de confirmação — um cliente por linha. Campos em branco são editáveis; selecione o status conforme o andamento do contato.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Prioridade</th>
+            <th scope="col">Hospital / Cliente</th>
+            <th scope="col">Cidade</th>
+            <th scope="col">Cenário(s)</th>
+            <th scope="col">Nome do contato</th>
+            <th scope="col">Cargo / função</th>
+            <th scope="col">Contato celular</th>
+            <th scope="col">Contato e-mail</th>
+            <th scope="col">Canal preferido</th>
+            <th scope="col">Responsável interno</th>
+            <th scope="col">Local exato confirmado</th>
+            <th scope="col">Status da confirmação</th>
+            <th scope="col">Última atualização</th>
+            <th scope="col">Observações</th>
+          </tr>
+        </thead>
+        <tbody id="corpo-tabela-checklist"></tbody>
+      </table>
+    </div>
+    <p class="aviso-tempo" style="margin-top:10px;">Qualquer alteração é salva automaticamente neste navegador. Ao trocar de computador ou navegador, exporte o CSV para não perder o histórico preenchido.</p>
+  </section>
+
+  <section aria-labelledby="titulo-ata">
+    <h2 class="titulo-secao" id="titulo-ata">Ata de visitas — resumo das conversas</h2>
+    <p class="periodo" style="margin-bottom:12px;">Preencha esta seção após cada visita, com o que foi ouvido do cliente e os próximos passos. Os dados ficam salvos neste navegador (localStorage) — não são enviados a nenhum servidor.</p>
+
+    <div class="resumo-checklist" id="resumo-ata" role="status" aria-live="polite"></div>
+
+    <div class="checklist-toolbar">
+      <div class="filtros-status" id="filtros-status-ata" role="group" aria-label="Filtrar por status da visita"></div>
+      <div class="checklist-acoes">
+        <button type="button" class="btn-acao secundario" id="btn-gerar-ata">Gerar ata consolidada</button>
+        <button type="button" class="btn-acao secundario" id="btn-exportar-csv-ata">Exportar CSV</button>
+        <button type="button" class="btn-acao secundario" id="btn-limpar-ata">Limpar dados salvos</button>
+      </div>
+    </div>
+
+    <div class="lista-ata" id="lista-ata"></div>
+  </section>
+
+  <section aria-labelledby="titulo-pendencias">
+    <h2 class="titulo-secao" id="titulo-pendencias">Itens pendentes para execução</h2>
+    <div class="tabela-scroll">
+      <table>
+        <caption>Pontos que ainda precisam de confirmação para a execução do roteiro já decidido.</caption>
+        <thead><tr><th scope="col">Item</th><th scope="col">Pergunta para fechamento</th><th scope="col">Responsável sugerido</th></tr></thead>
+        <tbody>
+          <tr><td>MEF — Campinas</td><td>PUC-Campinas e Unimed Campinas confirmam interlocutores disponíveis em 02 e 03/09, mesmo com o MEF em curso?</td><td>João / Comercial</td></tr>
+          <tr><td>Unimed Salto/Itu</td><td>Unidade e endereço da reunião já foram definidos?</td><td>João / Ana Carla</td></tr>
+          <tr><td>Carla Maria</td><td>Confirma BOS e Unimed Sorocaba? Participará do Hospital Evangélico?</td><td>Carla Maria</td></tr>
+          <tr><td>Fernando</td><td>Confirma presença no HCor em 31/08?</td><td>Fernando Bicudo</td></tr>
+          <tr><td>Transporte</td><td>Veículo dedicado contratado para todo o circuito?</td><td>João / Administrativo</td></tr>
+          <tr><td>Hospedagem</td><td>Reservas em Sorocaba, Itu e Campinas confirmadas, com cancelamento flexível?</td><td>João / Administrativo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="aviso-tempo" style="margin-top:14px;">
+      <strong>Sequência de execução:</strong>
+      1) Confirmar com os clientes prioritários data, turno e interlocutores presentes —
+      2) Validar com PUC-Campinas, Unimed Campinas e Unimed Salto/Itu a disponibilidade na semana do MEF —
+      3) Confirmar veículo dedicado e reservas de hospedagem —
+      4) Publicar a agenda final com endereços, contatos e pautas de cada visita —
+      5) Registrar a ata de cada visita na seção acima, à medida que forem sendo realizadas.
+    </p>
+  </section>
+
+  <details class="secao-historico">
+    <summary class="titulo-historico">Histórico de cenários avaliados anteriormente (não adotados)</summary>
+    <div class="corpo-historico">
+      <p class="periodo">Antes da decisão final, três cenários foram avaliados. O Cenário 1 (acima) foi o adotado, com passagens já emitidas. Os Cenários 2 e 3 abaixo ficam registrados apenas como histórico da avaliação — não fazem parte do plano em execução.</p>
+      <div class="tabela-scroll">
+        <table id="tabela-comparativo">
+          <caption>Comparativo feito na época da decisão — período, aeroportos, cobertura, risco e parecer de cada cenário avaliado.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Cenário</th>
+              <th scope="col">Período</th>
+              <th scope="col">Aeroporto de chegada</th>
+              <th scope="col">Aeroporto de retorno</th>
+              <th scope="col">Clientes contemplados</th>
+              <th scope="col">Cidades visitadas</th>
+              <th scope="col">Pernoites</th>
+              <th scope="col">Exposição ao MEF</th>
+              <th scope="col">Risco logístico</th>
+              <th scope="col">Parecer na época</th>
+            </tr>
+          </thead>
+          <tbody id="corpo-tabela-comparativo"></tbody>
+        </table>
+      </div>
+
+      <div class="nav-cenarios" role="tablist" aria-label="Cenários avaliados anteriormente" id="nav-cenarios"></div>
+      <div id="paineis-cenarios-historico"></div>
+    </div>
+  </details>
+
+  <footer class="notas-finais">
+    <h2>Notas de planejamento</h2>
+    <p>Os horários são faixas sugeridas e dependem da confirmação dos clientes e dos voos. Tempos rodoviários devem ser revalidados no aplicativo de trânsito na véspera e antes de cada saída. As reservas do interior devem ser feitas somente após o aceite das agendas prioritárias.</p>
+    <p>Fonte principal: documento <em>Cenarios_Planejamento_Visitas_SP_Ago_Set2026.docx</em>. Distâncias, tempos de deslocamento e coordenadas de mapa não constam no documento original e foram estimados a partir de referências geográficas públicas — devem ser tratados como aproximados e revalidados antes da publicação final.</p>
+  </footer>
+
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     DADOS CENTRALIZADOS — locais, hotéis, aeroportos, cenários
+     ========================================================= */
+
+  var LOCAIS = {
+    hcor: {
+      id:"hcor", tipo:"cliente", nome:"HCor — Hospital do Coração",
+      endereco:"Rua Desembargador Eliseu Guilherme, 147, Paraíso, São Paulo — SP",
+      cidade:"São Paulo", lat:-23.5820, lng:-46.6395, aproximado:true
+    },
+    hev: {
+      id:"hev", tipo:"cliente", nome:"Hospital Edmundo Vasconcelos",
+      endereco:"Rua Borges Lagoa, 1450, Vila Clementino, São Paulo — SP",
+      cidade:"São Paulo", lat:-23.5977, lng:-46.6438, aproximado:true
+    },
+    bos: {
+      id:"bos", tipo:"cliente", nome:"BOS",
+      endereco:"Rua Nabek Shiroma, 210, Jardim Emília, Sorocaba — SP",
+      cidade:"Sorocaba", lat:-23.5010, lng:-47.4550, aproximado:true
+    },
+    evangelico: {
+      id:"evangelico", tipo:"cliente", nome:"Hospital Evangélico de Sorocaba",
+      endereco:"Avenida Comendador Pereira Inácio, 950, Sorocaba — SP",
+      cidade:"Sorocaba", lat:-23.4995, lng:-47.4550, aproximado:true,
+      pendenteConfirmacao:"Unidade/entrada de atendimento a confirmar antes da visita."
+    },
+    unimedSorocaba: {
+      id:"unimedSorocaba", tipo:"cliente", nome:"Unimed Sorocaba (sede)",
+      endereco:"Rodovia Raposo Tavares, km 103 + 670 m, Sorocaba — SP",
+      cidade:"Sorocaba", lat:-23.4700, lng:-47.5050, aproximado:true
+    },
+    unimedSaltoItu: {
+      id:"unimedSaltoItu", tipo:"cliente", nome:"Unimed Salto/Itu",
+      endereco:"Unidade e endereço da reunião ainda pendentes",
+      cidade:"Salto/Itu", lat:-23.2000, lng:-47.2900, aproximado:true, pendente:true
+    },
+    pucCampinas: {
+      id:"pucCampinas", tipo:"cliente", nome:"Hospital PUC-Campinas",
+      endereco:"Avenida John Boyd Dunlop, s/n, Jardim Ipaussurama, Campinas — SP",
+      cidade:"Campinas", lat:-22.8940, lng:-47.1120, aproximado:true
+    },
+    unimedCampinas: {
+      id:"unimedCampinas", tipo:"cliente", nome:"Hospital Unimed Campinas — HUC",
+      endereco:"Rua São Carlos, 369, Vila Industrial, Campinas — SP",
+      cidade:"Campinas", lat:-22.9080, lng:-47.0730, aproximado:true
+    },
+    unimedLimeira: {
+      id:"unimedLimeira", tipo:"cliente", nome:"Hospital Unimed Limeira",
+      endereco:"Rua Santa Cruz, 620, Centro, Limeira — SP",
+      cidade:"Limeira", lat:-22.5650, lng:-47.4020, aproximado:true
+    },
+    ibisParaiso: {
+      id:"ibisParaiso", tipo:"hotel", nome:"ibis budget São Paulo Paraíso",
+      endereco:"Rua Vergueiro, 1571, Paraíso, São Paulo — SP",
+      cidade:"São Paulo", lat:-23.5745, lng:-46.6389, aproximado:true,
+      url:"https://all.accor.com/hotel/3547/index.pt.shtml",
+      justificativa:"Base padrão para HCor e Hospital Edmundo Vasconcelos, ambos a curta distância no Paraíso/Vila Clementino."
+    },
+    ibisSorocaba: {
+      id:"ibisSorocaba", tipo:"hotel", nome:"ibis budget Sorocaba",
+      endereco:"Avenida Professora Izoraida Marques Peres, 770, Campolim, Sorocaba — SP",
+      cidade:"Sorocaba", lat:-23.4830, lng:-47.4460, aproximado:true,
+      url:"https://all.accor.com/hotel/7797/index.pt.shtml",
+      justificativa:"Acesso favorável à Raposo Tavares e Castelo Branco, entre BOS, Hospital Evangélico e Unimed Sorocaba."
+    },
+    ibisItu: {
+      id:"ibisItu", tipo:"hotel", nome:"ibis Itu Plaza Shopping",
+      endereco:"Avenida Wolko Orni Yedlin, 1251, Itu — SP",
+      cidade:"Itu", lat:-23.2495, lng:-47.2990, aproximado:true,
+      url:"https://all.accor.com/hotel/9351/index.pt.shtml",
+      justificativa:"Posição intermediária entre Sorocaba e Campinas, próxima à região de Salto/Itu."
+    },
+    ibisCampinas: {
+      id:"ibisCampinas", tipo:"hotel", nome:"ibis budget Campinas Aquidaban",
+      endereco:"Rua José Paulino, 229, Centro, Campinas — SP",
+      cidade:"Campinas", lat:-22.9060, lng:-47.0625, aproximado:true,
+      url:"https://all.accor.com/hotel/7395/index.pt.shtml",
+      justificativa:"Acesso central a PUC-Campinas e Unimed Campinas, com rota direta à Viracopos."
+    },
+    congonhas: {
+      id:"congonhas", tipo:"aeroporto", nome:"Aeroporto de Congonhas (CGH)",
+      endereco:"Av. Washington Luís, s/n, Vila Congonhas, São Paulo — SP",
+      cidade:"São Paulo", lat:-23.6261, lng:-46.6564, aproximado:false
+    },
+    viracopos: {
+      id:"viracopos", tipo:"aeroporto", nome:"Aeroporto Internacional de Viracopos (VCP)",
+      endereco:"Rodovia Santos Dumont, km 66, Campinas — SP",
+      cidade:"Campinas", lat:-23.0074, lng:-47.1345, aproximado:false
+    },
+    transamerica: {
+      id:"transamerica", tipo:"mef", nome:"Transamerica Expo Center (referência MEF)",
+      endereco:"Av. Dr. Mário Vilas Boas Rizzo, 233, Santo Amaro, São Paulo — SP",
+      cidade:"São Paulo", lat:-23.6505, lng:-47.0000 + 42.96, aproximado:true
+    }
+  };
+  // correção de coordenada (evitar erro de digitação acima)
+  LOCAIS.transamerica.lng = -46.7040;
+
+  var PARTICIPANTES_BASE = "João e Ana Carla";
+
+  function visita(localId, horario, participantesExtra){
+    return {localId:localId, horario:horario, participantes: PARTICIPANTES_BASE + (participantesExtra ? " + " + participantesExtra : "")};
+  }
+
+  /* Estimativas de deslocamento — não constam no Word; baseadas em referências
+     rodoviárias públicas da região (Castelo Branco / Raposo Tavares / Bandeirantes / Anhanguera).
+     Tratar sempre como estimativa conservadora, nunca como horário garantido. */
+  var TRECHOS_REFERENCIA = {
+    "sp-sorocaba": {origem:"São Paulo", destino:"Sorocaba", distancia:"≈ 95 km", tempo:"1h40–2h10", risco:"moderado", orientacao:"Sair após o último compromisso; evitar pico de saída de SP (17h–19h) pela Castelo Branco."},
+    "sorocaba-saltoitu": {origem:"Sorocaba", destino:"Salto/Itu", distancia:"≈ 45 km", tempo:"50min–1h10", risco:"baixo", orientacao:"Trecho tranquilo pela Castelo Branco/SP-300; poucas variações de trânsito."},
+    "saltoitu-campinas": {origem:"Salto/Itu", destino:"Campinas", distancia:"≈ 55 km", tempo:"1h–1h20", risco:"moderado", orientacao:"Conferir obras/lentidão na SP-101/SP-075 antes da saída."},
+    "campinas-sp": {origem:"Campinas", destino:"São Paulo", distancia:"≈ 100 km", tempo:"1h30–2h", risco:"alto", orientacao:"Anhanguera/Bandeirantes com forte variação; evitar saída após 17h em dia útil."},
+    "campinas-limeira": {origem:"Campinas", destino:"Limeira", distancia:"≈ 40 km", tempo:"45min–1h", risco:"baixo", orientacao:"Trecho estável pela SP-332 (Rodovia Governador Adhemar de Barros)."},
+    "limeira-viracopos": {origem:"Limeira", destino:"Viracopos", distancia:"≈ 55 km", tempo:"1h–1h20", risco:"moderado", orientacao:"Somar margem aeroportuária de check-in; sair com folga mínima de 2h antes do voo."},
+    "campinas-viracopos": {origem:"Campinas (centro)", destino:"Viracopos", distancia:"≈ 15 km", tempo:"25–35min", risco:"baixo", orientacao:"Trecho curto; ainda assim reservar margem para check-in e trânsito local."}
+  };
+
+  var AVISO_TEMPOS = "Os tempos são estimativas conservadoras para deslocamento de carro em dias úteis. O trânsito deve ser revalidado na véspera e aproximadamente 30 minutos antes de cada saída.";
+
+  var CENARIOS = [
+    {
+      id:"c1",
+      numero:1,
+      titulo:"Cenário 1 — Semana de 31/08",
+      periodo:"31/08 a 04/09/2026",
+      circuito:"São Paulo → Sorocaba → Salto/Itu → Campinas → São Paulo",
+      aeroportoChegada:"congonhas",
+      aeroportoRetorno:"congonhas",
+      pernoites:4,
+      exposicaoMEF:"Alta — coincide com 02 e 03/09",
+      riscoLogistico:"Alto",
+      parecer:"condicionado",
+      selo:null,
+      mostrarMEF:true,
+      resumo:{
+        principalBeneficio:"Preserva as passagens aéreas já adquiridas (chegada e saída por Congonhas) e mantém os sete clientes prioritários mais Unimed Salto/Itu.",
+        principalRisco:"O MV Experience Forum ocorre em São Paulo nos dias 02 e 03/09, coincidindo com as visitas a PUC-Campinas e Unimed Campinas — interlocutores podem estar indisponíveis.",
+        condicaoAprovacao:"Confirmar com PUC-Campinas, Unimed Campinas e Unimed Salto/Itu a disponibilidade dos interlocutores-chave nas datas do MEF (02 e 03/09). O roteiro já está confirmado e as passagens emitidas — não há plano de migração para outra semana."
+      },
+      dias:[
+        {data:"Segunda, 31/08", manha:[{texto:"Chegada a Congonhas — voo já adquirido", horario:""}], tarde:[visita("hcor","14h30–16h30","Fernando Bicudo")], translado:"Após 17h: São Paulo → Sorocaba • pernoite em Sorocaba (ibis budget Sorocaba)", pernoite:"Sorocaba"},
+        {data:"Terça, 01/09", manha:[visita("bos","08h30–10h","Carla Maria")], tarde:[visita("evangelico","10h45–12h15","Carla Maria (participação a confirmar)"), visita("unimedSorocaba","14h–16h","Carla Maria")], translado:"Após 16h30: Sorocaba → Salto/Itu • pernoite na região (ibis Itu Plaza Shopping)", pernoite:"Salto/Itu"},
+        {data:"Quarta, 02/09", manha:[visita("unimedSaltoItu","09h–11h")], tarde:[{texto:"Margem para contingência e trabalho interno", horario:""}], translado:"Após 17h: Salto/Itu → Campinas • pernoite em Campinas (ibis budget Campinas Aquidaban)", pernoite:"Campinas"},
+        {data:"Quinta, 03/09", manha:[visita("pucCampinas","09h–11h")], tarde:[visita("unimedCampinas","14h–16h")], translado:"Após 16h30: Campinas → São Paulo • ibis budget Paraíso", pernoite:"São Paulo"},
+        {data:"Sexta, 04/09", manha:[visita("hev","até 10h (visita curta)")], tarde:[{texto:"Congonhas → Recife — voo já adquirido às 14h35", horario:"14h35"}], translado:"Check-out antes da visita; seguir ao aeroporto até 11h", pernoite:"—"}
+      ],
+      rota:["congonhas","hcor","bos","evangelico","unimedSorocaba","unimedSaltoItu","pucCampinas","unimedCampinas","hev","congonhas"],
+      hoteis:["ibisSorocaba","ibisItu","ibisCampinas","ibisParaiso"],
+      trechos:[
+        Object.assign({saida:"Após 17h (segunda)"}, TRECHOS_REFERENCIA["sp-sorocaba"]),
+        Object.assign({saida:"Após 16h30 (terça)"}, TRECHOS_REFERENCIA["sorocaba-saltoitu"]),
+        Object.assign({saida:"Após 17h (quarta)"}, TRECHOS_REFERENCIA["saltoitu-campinas"]),
+        Object.assign({saida:"Após 16h30 (quinta)"}, TRECHOS_REFERENCIA["campinas-sp"])
+      ],
+      avaliacao:{
+        favoraveis:["Preserva as passagens previamente adquiridas e mantém os sete clientes prioritários.","As viagens longas permanecem concentradas no fim da tarde e início da noite."],
+        atencao:["PUC-Campinas e Unimed Campinas coincidem com o segundo dia do MEF; interlocutores podem estar indisponíveis.","HEV na sexta precisa encerrar cedo por causa do voo das 14h35.","Limeira não cabe com segurança neste desenho."],
+        riscos:["Exposição direta ao MV Experience Forum em 02 e 03/09.","Dependência de confirmação de agenda de três clientes na mesma semana do evento."],
+        dependencias:["Confirmação de PUC-Campinas, Unimed Campinas e Unimed Salto/Itu.","Manutenção da malha aérea já emitida (Congonhas–Recife)."]
+      }
+    },
+    {
+      id:"c2",
+      numero:2,
+      titulo:"Cenário 2 — Semana de 24/08 | Opção 1",
+      periodo:"23/08 (noite) a 28/08/2026",
+      circuito:"São Paulo → Sorocaba → Salto/Itu → Campinas/Limeira → Viracopos",
+      aeroportoChegada:"congonhas",
+      aeroportoChegadaObs:"Aeroporto de chegada em São Paulo — terminal (Congonhas ou Guarulhos) a confirmar na emissão da passagem.",
+      aeroportoRetorno:"viracopos",
+      pernoites:5,
+      exposicaoMEF:"Nenhuma",
+      riscoLogistico:"Baixo",
+      parecer:"recomendado",
+      selo:"RECOMENDADO",
+      mostrarMEF:false,
+      resumo:{
+        principalBeneficio:"Maior cobertura de clientes (sete prioritários + Salto/Itu + possibilidade de Limeira) e encerramento do circuito perto do aeroporto, sem retorno rodoviário à capital.",
+        principalRisco:"Exige viagem no domingo à noite (23/08) e nova emissão ou alteração das passagens já adquiridas.",
+        condicaoAprovacao:"Confirmar voo noturno em 23/08 e retorno VCP–REC após 14h em 28/08. Reservar veículo dedicado de 24 a 28/08 e hotéis regionais com cancelamento flexível."
+      },
+      dias:[
+        {data:"Domingo, 23/08 (noite)", manha:[], tarde:[{texto:"Voo Recife → São Paulo", horario:"noite"}], translado:"Pernoite em São Paulo, ibis budget Paraíso", pernoite:"São Paulo"},
+        {data:"Segunda, 24/08", manha:[visita("hcor","09h–11h","Fernando Bicudo")], tarde:[visita("hev","14h–16h")], translado:"Após 16h30: São Paulo → Sorocaba • pernoite em Sorocaba (ibis budget Sorocaba)", pernoite:"Sorocaba"},
+        {data:"Terça, 25/08", manha:[visita("bos","08h30–10h","Carla Maria")], tarde:[visita("evangelico","10h45–12h15","Carla Maria (participação a confirmar)"), visita("unimedSorocaba","14h–16h","Carla Maria")], translado:"Após 16h30: Sorocaba → Salto/Itu • pernoite na região (ibis Itu Plaza Shopping)", pernoite:"Salto/Itu"},
+        {data:"Quarta, 26/08", manha:[visita("unimedSaltoItu","09h–11h")], tarde:[{texto:"Margem operacional / agenda interna", horario:""}], translado:"Após 17h: Salto/Itu → Campinas • pernoite em Campinas (ibis budget Campinas Aquidaban)", pernoite:"Campinas"},
+        {data:"Quinta, 27/08", manha:[visita("pucCampinas","09h–11h")], tarde:[visita("unimedCampinas","14h–16h")], translado:"Pernoite em Campinas (sem deslocamento intermunicipal ao final do dia)", pernoite:"Campinas"},
+        {data:"Sexta, 28/08", manha:[visita("unimedLimeira","08h30–10h (encaixe opcional)")], tarde:[{texto:"Voo Viracopos → Recife, após 14h", horario:"14h"}], translado:"Limeira → Viracopos: prever 1h e margem aeroportuária", pernoite:"—"}
+      ],
+      rota:["ibisParaiso","hcor","hev","bos","evangelico","unimedSorocaba","unimedSaltoItu","pucCampinas","unimedCampinas","unimedLimeira","viracopos"],
+      hoteis:["ibisParaiso","ibisSorocaba","ibisItu","ibisCampinas"],
+      trechos:[
+        Object.assign({saida:"Após 16h30 (segunda)"}, TRECHOS_REFERENCIA["sp-sorocaba"]),
+        Object.assign({saida:"Após 16h30 (terça)"}, TRECHOS_REFERENCIA["sorocaba-saltoitu"]),
+        Object.assign({saida:"Após 17h (quarta)"}, TRECHOS_REFERENCIA["saltoitu-campinas"]),
+        Object.assign({saida:"Após 10h (sexta, opcional)"}, TRECHOS_REFERENCIA["campinas-limeira"]),
+        Object.assign({saida:"Sexta, antes do voo das 14h"}, TRECHOS_REFERENCIA["limeira-viracopos"])
+      ],
+      avaliacao:{
+        favoraveis:["Maior cobertura: sete clientes prioritários, Salto/Itu e possibilidade de Limeira.","Não exige retorno de Campinas para São Paulo; encerra o circuito próximo ao aeroporto.","HCor e HEV ficam concentrados no primeiro dia, próximos ao hotel.","Sem conflito com o MEF."],
+        atencao:["Exige viagem no domingo à noite e nova emissão ou alteração das passagens.","Limeira depende de voo saindo de Viracopos preferencialmente após 14h."],
+        riscos:["Ausência de folga entre a chegada de domingo e a primeira visita de segunda.","Encaixe de Limeira pode pressionar o horário de saída para o aeroporto."],
+        dependencias:["Emissão do voo noturno de 23/08.","Confirmação do voo de retorno VCP–REC após 14h em 28/08.","Veículo dedicado contínuo de 24 a 28/08."]
+      }
+    },
+    {
+      id:"c3",
+      numero:3,
+      titulo:"Cenário 3 — Semana de 24/08 | Opção 2",
+      periodo:"24/08 a 28/08/2026",
+      circuito:"São Paulo → Sorocaba → Salto/Itu → Campinas → São Paulo",
+      aeroportoChegada:"congonhas",
+      aeroportoChegadaObs:"Aeroporto de chegada em São Paulo — terminal (Congonhas ou Guarulhos) a confirmar na emissão da passagem.",
+      aeroportoRetorno:"congonhas",
+      aeroportoRetornoObs:"Aeroporto de retorno em São Paulo — terminal a confirmar na emissão da passagem.",
+      pernoites:4,
+      exposicaoMEF:"Nenhuma",
+      riscoLogistico:"Baixo",
+      parecer:"alternativa",
+      selo:null,
+      mostrarMEF:false,
+      resumo:{
+        principalBeneficio:"Evita a viagem no domingo. O HCor é encaixado após a chegada em 24/08 e o HEV fica para a manhã de 28/08, antes do voo noturno.",
+        principalRisco:"A chegada aérea de segunda precisa ocorrer até 11h30 para proteger a visita ao HCor, e há retorno Campinas → São Paulo na quinta-feira em horário de trânsito intenso.",
+        condicaoAprovacao:"Selecionar voo de ida com chegada até 11h30 e voo de retorno preferencialmente após 17h. Prever margem ampliada no deslocamento Campinas–São Paulo na quinta-feira."
+      },
+      dias:[
+        {data:"Segunda, 24/08", manha:[{texto:"Voo Recife → São Paulo, chegada até 11h30", horario:"11h30"}], tarde:[visita("hcor","14h30–16h30","Fernando Bicudo")], translado:"Após 17h: São Paulo → Sorocaba • pernoite em Sorocaba (ibis budget Sorocaba)", pernoite:"Sorocaba"},
+        {data:"Terça, 25/08", manha:[visita("bos","08h30–10h","Carla Maria")], tarde:[visita("evangelico","10h45–12h15","Carla Maria (participação a confirmar)"), visita("unimedSorocaba","14h–16h","Carla Maria")], translado:"Após 16h30: Sorocaba → Salto/Itu • pernoite na região (ibis Itu Plaza Shopping)", pernoite:"Salto/Itu"},
+        {data:"Quarta, 26/08", manha:[visita("unimedSaltoItu","09h–11h")], tarde:[{texto:"Margem operacional / agenda interna", horario:""}], translado:"Após 17h: Salto/Itu → Campinas • pernoite em Campinas (ibis budget Campinas Aquidaban)", pernoite:"Campinas"},
+        {data:"Quinta, 27/08", manha:[visita("pucCampinas","09h–11h")], tarde:[visita("unimedCampinas","14h–16h")], translado:"Após 16h30: Campinas → São Paulo • ibis budget Paraíso", pernoite:"São Paulo"},
+        {data:"Sexta, 28/08", manha:[visita("hev","09h–11h")], tarde:[{texto:"Voo São Paulo → Recife, após 17h", horario:"17h"}], translado:"Check-out antes da visita; seguir ao aeroporto após o almoço", pernoite:"—"}
+      ],
+      rota:["congonhas","hcor","bos","evangelico","unimedSorocaba","unimedSaltoItu","pucCampinas","unimedCampinas","hev","congonhas"],
+      hoteis:["ibisSorocaba","ibisItu","ibisCampinas","ibisParaiso"],
+      trechos:[
+        Object.assign({saida:"Após 17h (segunda)"}, TRECHOS_REFERENCIA["sp-sorocaba"]),
+        Object.assign({saida:"Após 16h30 (terça)"}, TRECHOS_REFERENCIA["sorocaba-saltoitu"]),
+        Object.assign({saida:"Após 17h (quarta)"}, TRECHOS_REFERENCIA["saltoitu-campinas"]),
+        Object.assign({saida:"Após 16h30 (quinta)"}, TRECHOS_REFERENCIA["campinas-sp"])
+      ],
+      avaliacao:{
+        favoraveis:["Sem conflito com o MEF e sem necessidade de viajar no domingo.","HEV fica próximo ao ibis budget Paraíso, facilitando o encerramento da viagem.","Mantém todos os sete clientes prioritários e Salto/Itu."],
+        atencao:["A chegada aérea de segunda precisa ocorrer até 11h30 para proteger a visita ao HCor.","Exige retorno Campinas → São Paulo na quinta no horário de trânsito intenso.","Unimed Limeira não cabe sem comprometer uma visita prioritária."],
+        riscos:["Atraso no voo de ida compromete diretamente o HCor.","Trânsito intenso no retorno de quinta-feira pode atrasar o check-in no hotel."],
+        dependencias:["Voo de ida com chegada garantida até 11h30.","Voo de volta preferencialmente após 17h."]
+      }
+    }
+  ];
+
+  /* =========================================================
+     DADOS — checklist de confirmação dos clientes
+     ========================================================= */
+
+  var CHECKLIST_CLIENTES = [
+    {localId:"hcor", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Fernando Bicudo"},
+    {localId:"hev", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
+    {localId:"bos", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria"},
+    {localId:"evangelico", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria", localPendentePorPadrao:true},
+    {localId:"unimedSorocaba", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria"},
+    {localId:"unimedSaltoItu", prioridade:"encaixe", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla", localPendentePorPadrao:true},
+    {localId:"pucCampinas", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
+    {localId:"unimedCampinas", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
+    {localId:"unimedLimeira", prioridade:"encaixe", cenarios:"C2 (encaixe opcional)", responsavelSugerido:"João / Ana Carla"}
+  ];
+
+  var CHECKLIST_STORAGE_KEY = "intelectah_checklist_visitas_sp_v1";
+  var STATUS_OPCOES = [
+    {valor:"pendente", rotulo:"Pendente", classe:"status-pendente"},
+    {valor:"em-contato", rotulo:"Em contato", classe:"status-em-contato"},
+    {valor:"confirmado", rotulo:"Confirmado", classe:"status-confirmado"},
+    {valor:"reagendamento", rotulo:"Reagendamento solicitado", classe:"status-reagendamento"},
+    {valor:"recusado", rotulo:"Recusado", classe:"status-recusado"}
+  ];
+  var CANAL_OPCOES = ["Não definido", "WhatsApp", "E-mail", "Telefone", "Comercial/CRM"];
+  var RESPONSAVEL_OPCOES = ["João", "Ana Carla", "Carla Maria", "Fernando Bicudo", "Comercial"];
+  var LOCAL_CONFIRMADO_OPCOES = [
+    {valor:"a-confirmar", rotulo:"A confirmar"},
+    {valor:"pendente", rotulo:"Pendente"},
+    {valor:"sim", rotulo:"Sim"}
+  ];
+
+  function carregarChecklistSalvo(){
+    try{
+      var bruto = window.localStorage.getItem(CHECKLIST_STORAGE_KEY);
+      return bruto ? JSON.parse(bruto) : {};
+    } catch(e){ return {}; }
+  }
+
+  function salvarChecklist(dados){
+    try{ window.localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(dados)); } catch(e){ /* localStorage indisponível — segue apenas em memória */ }
+  }
+
+  var checklistDados = carregarChecklistSalvo();
+  var filtroStatusAtivo = "todos";
+
+  function estadoLinha(item){
+    var salvo = checklistDados[item.localId] || {};
+    return {
+      nomeContato: salvo.nomeContato || "",
+      cargo: salvo.cargo || "",
+      celular: salvo.celular || "",
+      email: salvo.email || "",
+      canal: salvo.canal || CANAL_OPCOES[0],
+      responsavel: salvo.responsavel || item.responsavelSugerido,
+      localConfirmado: salvo.localConfirmado || (item.localPendentePorPadrao ? "pendente" : "a-confirmar"),
+      status: salvo.status || "pendente",
+      ultimaAtualizacao: salvo.ultimaAtualizacao || "",
+      observacoes: salvo.observacoes || ""
+    };
+  }
+
+  function atualizarCampoChecklist(localId, campo, valor){
+    if(!checklistDados[localId]){
+      var item = CHECKLIST_CLIENTES.find(function(i){ return i.localId === localId; });
+      checklistDados[localId] = estadoLinha(item);
+    }
+    checklistDados[localId][campo] = valor;
+    checklistDados[localId].ultimaAtualizacao = new Date().toLocaleString("pt-BR");
+    salvarChecklist(checklistDados);
+  }
+
+  function optionsHTML(opcoes, valorAtual, comRotuloObjeto){
+    return opcoes.map(function(op){
+      var v = comRotuloObjeto ? op.valor : op;
+      var r = comRotuloObjeto ? op.rotulo : op;
+      return '<option value="' + v + '"' + (v === valorAtual ? " selected" : "") + '>' + r + '</option>';
+    }).join("");
+  }
+
+  function montarResumoChecklist(){
+    var wrap = document.getElementById("resumo-checklist");
+    var contagem = {};
+    STATUS_OPCOES.forEach(function(s){ contagem[s.valor] = 0; });
+    CHECKLIST_CLIENTES.forEach(function(item){
+      var estado = estadoLinha(item);
+      contagem[estado.status] = (contagem[estado.status] || 0) + 1;
+    });
+    var cores = {pendente:"var(--texto2)", "em-contato":"var(--alerta)", confirmado:"#0E7C72", reagendamento:"#A23B2E", recusado:"#A23B2E"};
+    wrap.innerHTML = STATUS_OPCOES.map(function(s){
+      return '<span class="pill-resumo"><span class="ponto" style="background:' + cores[s.valor] + ';"></span>' + s.rotulo + ": " + (contagem[s.valor] || 0) + "/" + CHECKLIST_CLIENTES.length + "</span>";
+    }).join("");
+  }
+
+  function montarFiltrosStatus(){
+    var wrap = document.getElementById("filtros-status");
+    var opcoes = [{valor:"todos", rotulo:"Todos"}].concat(STATUS_OPCOES.map(function(s){ return {valor:s.valor, rotulo:s.rotulo}; }));
+    wrap.innerHTML = "";
+    opcoes.forEach(function(op){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "filtro-btn";
+      btn.textContent = op.rotulo;
+      btn.setAttribute("aria-pressed", op.valor === "todos" ? "true" : "false");
+      btn.addEventListener("click", function(){
+        filtroStatusAtivo = op.valor;
+        wrap.querySelectorAll(".filtro-btn").forEach(function(b){ b.setAttribute("aria-pressed", "false"); });
+        btn.setAttribute("aria-pressed", "true");
+        aplicarFiltroChecklist();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function aplicarFiltroChecklist(){
+    document.querySelectorAll("#corpo-tabela-checklist tr").forEach(function(tr){
+      var mostra = filtroStatusAtivo === "todos" || tr.getAttribute("data-status") === filtroStatusAtivo;
+      tr.classList.toggle("linha-oculta-filtro", !mostra);
+    });
+  }
+
+  function montarChecklist(){
+    var corpo = document.getElementById("corpo-tabela-checklist");
+    corpo.innerHTML = "";
+    CHECKLIST_CLIENTES.forEach(function(item){
+      var loc = LOCAIS[item.localId];
+      var estado = estadoLinha(item);
+      var tr = document.createElement("tr");
+      tr.setAttribute("data-status", estado.status);
+      tr.setAttribute("data-cliente", item.localId);
+
+      tr.innerHTML =
+        '<td class="col-fixo"><span class="selo-prioridade ' + item.prioridade + '">' + (item.prioridade === "prioritario" ? "Prioritário" : "Encaixe") + '</span></td>' +
+        '<td class="col-fixo">' + loc.nome + '</td>' +
+        '<td class="col-fixo">' + loc.cidade + '</td>' +
+        '<td class="col-fixo">' + item.cenarios + '</td>' +
+        '<td><input type="text" data-campo="nomeContato" value="' + estado.nomeContato + '" aria-label="Nome do contato em ' + loc.nome + '" placeholder="Nome"></td>' +
+        '<td><input type="text" data-campo="cargo" value="' + estado.cargo + '" aria-label="Cargo do contato em ' + loc.nome + '" placeholder="Cargo/função"></td>' +
+        '<td><input type="tel" data-campo="celular" value="' + estado.celular + '" aria-label="Celular do contato em ' + loc.nome + '" placeholder="(11) 90000-0000"></td>' +
+        '<td><input type="email" data-campo="email" value="' + estado.email + '" aria-label="E-mail do contato em ' + loc.nome + '" placeholder="nome@hospital.com.br"></td>' +
+        '<td><select data-campo="canal" aria-label="Canal preferido de confirmação em ' + loc.nome + '">' + optionsHTML(CANAL_OPCOES, estado.canal, false) + '</select></td>' +
+        '<td><select data-campo="responsavel" aria-label="Responsável interno pelo contato em ' + loc.nome + '">' + optionsHTML(RESPONSAVEL_OPCOES, estado.responsavel, false) + '</select></td>' +
+        '<td><select data-campo="localConfirmado" aria-label="Local exato confirmado em ' + loc.nome + '">' + optionsHTML(LOCAL_CONFIRMADO_OPCOES, estado.localConfirmado, true) + '</select></td>' +
+        '<td><select class="status-select ' + STATUS_OPCOES.find(function(s){return s.valor===estado.status;}).classe + '" data-campo="status" aria-label="Status da confirmação em ' + loc.nome + '">' + optionsHTML(STATUS_OPCOES, estado.status, true) + '</select></td>' +
+        '<td class="marca-tempo" data-campo-display="ultimaAtualizacao">' + (estado.ultimaAtualizacao || "—") + '</td>' +
+        '<td><input type="text" data-campo="observacoes" value="' + estado.observacoes + '" aria-label="Observações sobre ' + loc.nome + '" placeholder="Observações"></td>';
+
+      tr.querySelectorAll("[data-campo]").forEach(function(campo){
+        campo.addEventListener("change", function(){
+          var valor = campo.value;
+          atualizarCampoChecklist(item.localId, campo.getAttribute("data-campo"), valor);
+          tr.querySelector('[data-campo-display="ultimaAtualizacao"]').textContent = checklistDados[item.localId].ultimaAtualizacao;
+          if(campo.getAttribute("data-campo") === "status"){
+            tr.setAttribute("data-status", valor);
+            STATUS_OPCOES.forEach(function(s){ campo.classList.remove(s.classe); });
+            campo.classList.add(STATUS_OPCOES.find(function(s){ return s.valor === valor; }).classe);
+            montarResumoChecklist();
+            aplicarFiltroChecklist();
+          }
+        });
+      });
+
+      corpo.appendChild(tr);
+    });
+  }
+
+  function exportarChecklistCSV(){
+    var cabecalho = ["Prioridade","Hospital/Cliente","Cidade","Cenario(s)","Nome do contato","Cargo/funcao","Celular","E-mail","Canal preferido","Responsavel interno","Local exato confirmado","Status","Ultima atualizacao","Observacoes"];
+    function escaparCSV(v){
+      v = String(v == null ? "" : v);
+      if(/[",;\n]/.test(v)){ v = '"' + v.replace(/"/g, '""') + '"'; }
+      return v;
+    }
+    var linhas = [cabecalho.join(";")];
+    CHECKLIST_CLIENTES.forEach(function(item){
+      var loc = LOCAIS[item.localId];
+      var estado = estadoLinha(item);
+      var statusRotulo = STATUS_OPCOES.find(function(s){ return s.valor === estado.status; }).rotulo;
+      var localRotulo = LOCAL_CONFIRMADO_OPCOES.find(function(s){ return s.valor === estado.localConfirmado; }).rotulo;
+      linhas.push([
+        item.prioridade === "prioritario" ? "Prioritário" : "Encaixe",
+        loc.nome, loc.cidade, item.cenarios,
+        estado.nomeContato, estado.cargo, estado.celular, estado.email, estado.canal, estado.responsavel,
+        localRotulo, statusRotulo, estado.ultimaAtualizacao, estado.observacoes
+      ].map(escaparCSV).join(";"));
+    });
+    var csv = "﻿" + linhas.join("\r\n");
+    var blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "checklist_confirmacao_visitas_" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function ligarControlesChecklist(){
+    document.getElementById("btn-exportar-csv").addEventListener("click", exportarChecklistCSV);
+    document.getElementById("btn-imprimir-checklist").addEventListener("click", function(){ window.print(); });
+    document.getElementById("btn-limpar-checklist").addEventListener("click", function(){
+      var confirmar = window.confirm("Isso vai apagar todos os contatos e status salvos neste navegador para o checklist. Deseja continuar?");
+      if(!confirmar) return;
+      checklistDados = {};
+      salvarChecklist(checklistDados);
+      montarChecklist();
+      montarResumoChecklist();
+      aplicarFiltroChecklist();
+    });
+  }
+
+  /* =========================================================
+     DADOS — ata de visitas (resumo pós-visita)
+     ========================================================= */
+
+  var ATA_STORAGE_KEY = "intelectah_ata_visitas_sp_v1";
+  var ATA_STATUS_OPCOES = [
+    {valor:"nao-realizada", rotulo:"Não realizada", classe:"nao-realizada"},
+    {valor:"realizada", rotulo:"Realizada", classe:"realizada"},
+    {valor:"reagendada", rotulo:"Reagendada", classe:"reagendada"},
+    {valor:"cancelada", rotulo:"Cancelada", classe:"cancelada"}
+  ];
+
+  function carregarAtaSalva(){
+    try{
+      var bruto = window.localStorage.getItem(ATA_STORAGE_KEY);
+      return bruto ? JSON.parse(bruto) : {};
+    } catch(e){ return {}; }
+  }
+  function salvarAta(dados){
+    try{ window.localStorage.setItem(ATA_STORAGE_KEY, JSON.stringify(dados)); } catch(e){ /* localStorage indisponível — segue apenas em memória */ }
+  }
+
+  var ataDados = carregarAtaSalva();
+  var filtroStatusAtivoAta = "todos";
+
+  function estadoAta(item){
+    var salvo = ataDados[item.localId] || {};
+    return {
+      dataEfetiva: salvo.dataEfetiva || "",
+      statusVisita: salvo.statusVisita || "nao-realizada",
+      participantesInternos: salvo.participantesInternos || "",
+      interlocutoresPresentes: salvo.interlocutoresPresentes || "",
+      resumoConversa: salvo.resumoConversa || "",
+      oportunidades: salvo.oportunidades || "",
+      proximosPassos: salvo.proximosPassos || "",
+      responsavelFollowUp: salvo.responsavelFollowUp || item.responsavelSugerido,
+      dataRegistro: salvo.dataRegistro || ""
+    };
+  }
+
+  function atualizarCampoAta(localId, campo, valor){
+    if(!ataDados[localId]){
+      var item = CHECKLIST_CLIENTES.find(function(i){ return i.localId === localId; });
+      ataDados[localId] = estadoAta(item);
+    }
+    ataDados[localId][campo] = valor;
+    ataDados[localId].dataRegistro = new Date().toLocaleString("pt-BR");
+    salvarAta(ataDados);
+  }
+
+  function escaparHTML(v){
+    return String(v == null ? "" : v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function montarResumoAta(){
+    var wrap = document.getElementById("resumo-ata");
+    var contagem = {};
+    ATA_STATUS_OPCOES.forEach(function(s){ contagem[s.valor] = 0; });
+    CHECKLIST_CLIENTES.forEach(function(item){
+      var estado = estadoAta(item);
+      contagem[estado.statusVisita] = (contagem[estado.statusVisita] || 0) + 1;
+    });
+    var cores = {"nao-realizada":"var(--texto2)", realizada:"#0E7C72", reagendada:"var(--alerta)", cancelada:"#A23B2E"};
+    wrap.innerHTML = ATA_STATUS_OPCOES.map(function(s){
+      return '<span class="pill-resumo"><span class="ponto" style="background:' + cores[s.valor] + ';"></span>' + s.rotulo + ": " + (contagem[s.valor] || 0) + "/" + CHECKLIST_CLIENTES.length + "</span>";
+    }).join("");
+  }
+
+  function montarFiltrosAta(){
+    var wrap = document.getElementById("filtros-status-ata");
+    var opcoes = [{valor:"todos", rotulo:"Todos"}].concat(ATA_STATUS_OPCOES.map(function(s){ return {valor:s.valor, rotulo:s.rotulo}; }));
+    wrap.innerHTML = "";
+    opcoes.forEach(function(op){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "filtro-btn";
+      btn.textContent = op.rotulo;
+      btn.setAttribute("aria-pressed", op.valor === "todos" ? "true" : "false");
+      btn.addEventListener("click", function(){
+        filtroStatusAtivoAta = op.valor;
+        wrap.querySelectorAll(".filtro-btn").forEach(function(b){ b.setAttribute("aria-pressed", "false"); });
+        btn.setAttribute("aria-pressed", "true");
+        aplicarFiltroAta();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function aplicarFiltroAta(){
+    document.querySelectorAll("#lista-ata .cartao-ata").forEach(function(card){
+      var mostra = filtroStatusAtivoAta === "todos" || card.getAttribute("data-status") === filtroStatusAtivoAta;
+      card.style.display = mostra ? "" : "none";
+    });
+  }
+
+  function montarAta(){
+    var wrap = document.getElementById("lista-ata");
+    wrap.innerHTML = "";
+    CHECKLIST_CLIENTES.forEach(function(item){
+      var loc = LOCAIS[item.localId];
+      var estado = estadoAta(item);
+      var card = document.createElement("details");
+      card.className = "cartao-ata";
+      card.setAttribute("data-cliente", item.localId);
+      card.setAttribute("data-status", estado.statusVisita);
+
+      var statusInfo = ATA_STATUS_OPCOES.find(function(s){ return s.valor === estado.statusVisita; });
+
+      card.innerHTML =
+        '<summary><span>' + escaparHTML(loc.nome) + (estado.dataEfetiva ? " · " + escaparHTML(estado.dataEfetiva) : "") + '</span><span class="tag-status-ata ' + statusInfo.classe + '">' + statusInfo.rotulo + '</span></summary>' +
+        '<div class="corpo-ata">' +
+          '<div class="campo-ata"><label>Data efetiva da visita</label><input type="date" data-campo="dataEfetiva" value="' + escaparHTML(estado.dataEfetiva) + '"></div>' +
+          '<div class="campo-ata"><label>Status da visita</label><select data-campo="statusVisita">' + optionsHTML(ATA_STATUS_OPCOES, estado.statusVisita, true) + '</select></div>' +
+          '<div class="campo-ata"><label>Participantes internos presentes</label><input type="text" data-campo="participantesInternos" value="' + escaparHTML(estado.participantesInternos) + '" aria-label="Participantes internos presentes em ' + escaparHTML(loc.nome) + '" placeholder="Ex.: João, Ana Carla"></div>' +
+          '<div class="campo-ata"><label>Interlocutores do cliente presentes</label><input type="text" data-campo="interlocutoresPresentes" value="' + escaparHTML(estado.interlocutoresPresentes) + '" aria-label="Interlocutores do cliente presentes em ' + escaparHTML(loc.nome) + '" placeholder="Nomes e cargos"></div>' +
+          '<div class="campo-ata full"><label>Resumo da conversa / principais pontos ouvidos</label><textarea data-campo="resumoConversa" aria-label="Resumo da conversa com ' + escaparHTML(loc.nome) + '" placeholder="O que foi discutido, dores relatadas, feedback...">' + escaparHTML(estado.resumoConversa) + '</textarea></div>' +
+          '<div class="campo-ata full"><label>Oportunidades identificadas</label><textarea data-campo="oportunidades" aria-label="Oportunidades identificadas em ' + escaparHTML(loc.nome) + '" placeholder="Necessidades ou interesses identificados">' + escaparHTML(estado.oportunidades) + '</textarea></div>' +
+          '<div class="campo-ata full"><label>Próximos passos</label><textarea data-campo="proximosPassos" aria-label="Próximos passos com ' + escaparHTML(loc.nome) + '" placeholder="Ações de follow-up e prazos">' + escaparHTML(estado.proximosPassos) + '</textarea></div>' +
+          '<div class="campo-ata"><label>Responsável pelo follow-up</label><select data-campo="responsavelFollowUp">' + optionsHTML(RESPONSAVEL_OPCOES, estado.responsavelFollowUp, false) + '</select></div>' +
+          '<div class="campo-ata"><label>Registrado em</label><input type="text" value="' + escaparHTML(estado.dataRegistro || "—") + '" disabled></div>' +
+        '</div>';
+
+      card.querySelectorAll("[data-campo]").forEach(function(campo){
+        campo.addEventListener("change", function(){
+          atualizarCampoAta(item.localId, campo.getAttribute("data-campo"), campo.value);
+          if(campo.getAttribute("data-campo") === "statusVisita"){
+            var novoInfo = ATA_STATUS_OPCOES.find(function(s){ return s.valor === campo.value; });
+            card.setAttribute("data-status", campo.value);
+            var tag = card.querySelector(".tag-status-ata");
+            tag.className = "tag-status-ata " + novoInfo.classe;
+            tag.textContent = novoInfo.rotulo;
+            montarResumoAta();
+            aplicarFiltroAta();
+          }
+          if(campo.getAttribute("data-campo") === "dataEfetiva"){
+            card.querySelector("summary span:first-child").textContent = loc.nome + (campo.value ? " · " + campo.value : "");
+          }
+        });
+      });
+
+      wrap.appendChild(card);
+    });
+  }
+
+  function exportarAtaCSV(){
+    var cabecalho = ["Hospital/Cliente","Cidade","Data efetiva","Status da visita","Participantes internos","Interlocutores presentes","Resumo da conversa","Oportunidades identificadas","Proximos passos","Responsavel pelo follow-up","Registrado em"];
+    function escaparCSV(v){
+      v = String(v == null ? "" : v);
+      if(/[",;\n]/.test(v)){ v = '"' + v.replace(/"/g, '""') + '"'; }
+      return v;
+    }
+    var linhas = [cabecalho.join(";")];
+    CHECKLIST_CLIENTES.forEach(function(item){
+      var loc = LOCAIS[item.localId];
+      var estado = estadoAta(item);
+      var statusRotulo = ATA_STATUS_OPCOES.find(function(s){ return s.valor === estado.statusVisita; }).rotulo;
+      linhas.push([
+        loc.nome, loc.cidade, estado.dataEfetiva, statusRotulo, estado.participantesInternos, estado.interlocutoresPresentes,
+        estado.resumoConversa, estado.oportunidades, estado.proximosPassos, estado.responsavelFollowUp, estado.dataRegistro
+      ].map(escaparCSV).join(";"));
+    });
+    var csv = "﻿" + linhas.join("\r\n");
+    var blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "ata_visitas_" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function gerarAtaConsolidada(){
+    var partes = [];
+    var algumRegistro = false;
+    CHECKLIST_CLIENTES.forEach(function(item){
+      var loc = LOCAIS[item.localId];
+      var estado = estadoAta(item);
+      var statusRotulo = ATA_STATUS_OPCOES.find(function(s){ return s.valor === estado.statusVisita; }).rotulo;
+      var temConteudo = estado.resumoConversa || estado.oportunidades || estado.proximosPassos || estado.dataEfetiva;
+      if(temConteudo) algumRegistro = true;
+      partes.push(
+        '<section style="margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid #D7DEE6;">' +
+        '<h2 style="color:#173A5E; font-size:16px; margin:0 0 6px 0;">' + escaparHTML(loc.nome) + '</h2>' +
+        '<p style="font-size:12.5px; color:#647482; margin:0 0 10px 0;">' + escaparHTML(loc.cidade) + ' · Status: <strong>' + statusRotulo + '</strong>' + (estado.dataEfetiva ? " · Visita em " + escaparHTML(estado.dataEfetiva) : "") + '</p>' +
+        (estado.participantesInternos ? '<p><strong>Participantes internos:</strong> ' + escaparHTML(estado.participantesInternos) + '</p>' : "") +
+        (estado.interlocutoresPresentes ? '<p><strong>Interlocutores do cliente:</strong> ' + escaparHTML(estado.interlocutoresPresentes) + '</p>' : "") +
+        (estado.resumoConversa ? '<p><strong>Resumo da conversa:</strong><br>' + escaparHTML(estado.resumoConversa).replace(/\n/g,"<br>") + '</p>' : '<p style="color:#647482;"><em>Sem registro de conversa até o momento.</em></p>') +
+        (estado.oportunidades ? '<p><strong>Oportunidades identificadas:</strong><br>' + escaparHTML(estado.oportunidades).replace(/\n/g,"<br>") + '</p>' : "") +
+        (estado.proximosPassos ? '<p><strong>Próximos passos:</strong><br>' + escaparHTML(estado.proximosPassos).replace(/\n/g,"<br>") + '</p>' : "") +
+        (estado.responsavelFollowUp ? '<p><strong>Responsável pelo follow-up:</strong> ' + escaparHTML(estado.responsavelFollowUp) + '</p>' : "") +
+        '</section>'
+      );
+    });
+
+    var agora = new Date().toLocaleString("pt-BR");
+    var doc =
+      '<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ata consolidada de visitas — Intelectah</title>' +
+      '<style>body{font-family:Inter,Arial,Helvetica,sans-serif;color:#22313F;max-width:800px;margin:32px auto;padding:0 20px;line-height:1.5;} ' +
+      'h1{color:#173A5E;font-size:20px;} .cabecalho{border-bottom:3px solid #19AFA3;padding-bottom:12px;margin-bottom:24px;} ' +
+      '.aviso{background:#F4F6F9;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#647482;margin-bottom:20px;} ' +
+      '@media print{ .no-print{display:none;} }</style></head><body>' +
+      '<div class="cabecalho"><h1>Ata consolidada de visitas a clientes</h1>' +
+      '<p style="color:#647482;font-size:13px;">Intelectah · Roteiro de 31/08 a 04/09/2026 · Gerado em ' + agora + '</p></div>' +
+      (algumRegistro ? "" : '<div class="aviso">Nenhuma conversa foi registrada ainda na ata de visitas. Preencha a seção "Ata de visitas" no material principal após cada visita para consolidar aqui.</div>') +
+      partes.join("") +
+      '<p class="no-print" style="margin-top:24px;"><button onclick="window.print()" style="background:#173A5E;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-size:13.5px;">Imprimir / Salvar em PDF</button></p>' +
+      '</body></html>';
+
+    var win = window.open("", "_blank");
+    if(!win){
+      alert("O navegador bloqueou a abertura da nova aba. Permita pop-ups para este site e tente novamente.");
+      return;
+    }
+    win.document.open();
+    win.document.write(doc);
+    win.document.close();
+  }
+
+  function ligarControlesAta(){
+    document.getElementById("btn-gerar-ata").addEventListener("click", gerarAtaConsolidada);
+    document.getElementById("btn-exportar-csv-ata").addEventListener("click", exportarAtaCSV);
+    document.getElementById("btn-limpar-ata").addEventListener("click", function(){
+      var confirmar = window.confirm("Isso vai apagar todos os registros de conversas salvos neste navegador na ata de visitas. Deseja continuar?");
+      if(!confirmar) return;
+      ataDados = {};
+      salvarAta(ataDados);
+      montarAta();
+      montarResumoAta();
+      aplicarFiltroAta();
+    });
+  }
+
+  /* =========================================================
+     RENDERIZAÇÃO — comparativo, cards, tabela
+     ========================================================= */
+
+  function nomeParecer(p){
+    return {recomendado:"Recomendado", alternativa:"Alternativa", condicionado:"Condicionado"}[p] || p;
+  }
+
+  function montarTabelaComparativo(){
+    var corpo = document.getElementById("corpo-tabela-comparativo");
+    CENARIOS.forEach(function(c){
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td><strong>" + c.titulo + "</strong></td>" +
+        "<td>" + c.periodo + "</td>" +
+        "<td>" + LOCAIS[c.aeroportoChegada].nome + "</td>" +
+        "<td>" + LOCAIS[c.aeroportoRetorno].nome + "</td>" +
+        "<td>7 clientes prioritários" + (c.id !== "c2" ? " + Salto/Itu" : " + Salto/Itu + Limeira (encaixe)") + "</td>" +
+        "<td>São Paulo, Sorocaba, Salto/Itu, Campinas" + (c.id === "c2" ? ", Limeira" : "") + "</td>" +
+        "<td>" + c.pernoites + "</td>" +
+        "<td>" + c.exposicaoMEF + "</td>" +
+        "<td>" + c.riscoLogistico + "</td>" +
+        '<td><span class="parecer ' + c.parecer + '">' + nomeParecer(c.parecer) + "</span></td>";
+      corpo.appendChild(tr);
+    });
+  }
+
+  /* =========================================================
+     RENDERIZAÇÃO — abas e painel de cenário
+     ========================================================= */
+
+  function iconeCor(tipo){
+    return {cliente:"var(--marcador-cliente)", hotel:"var(--marcador-hotel)", aeroporto:"var(--marcador-aeroporto)", mef:"var(--marcador-mef)"}[tipo];
+  }
+
+  function linhaAgendaHTML(item){
+    if(item.localId){
+      var loc = LOCAIS[item.localId];
+      return '<div class="atividade"><span class="horario">' + (item.horario || "") + "</span> — " + loc.nome +
+        (loc.pendente ? '<span class="tag-pendente">Pendente</span>' : "") +
+        '<br><small style="color:var(--texto2);">' + item.participantes + "</small></div>";
+    }
+    return '<div class="atividade">' + (item.horario ? '<span class="horario">' + item.horario + "</span> — " : "") + item.texto + "</div>";
+  }
+
+  function montarPainelCenario(c, opts){
+    opts = opts || {};
+    var painel = document.createElement("section");
+    painel.className = "painel-cenario";
+    painel.id = "painel-" + c.id;
+    if(opts.comAbas){
+      painel.setAttribute("role","tabpanel");
+      painel.setAttribute("aria-labelledby", "aba-" + c.id);
+      painel.hidden = c.id !== opts.idAtivoPadrao;
+    }
+
+    var html = "";
+
+    if(opts.avisoNaoAdotado){
+      html += '<div class="aviso-nao-adotado">Este cenário não foi adotado. O plano confirmado é o Cenário 1 (semana de 31/08 a 04/09), com passagens já emitidas. Mantido aqui apenas como histórico da avaliação feita na época.</div>';
+    }
+
+    html += '<div class="cabecalho-cenario"><div>' +
+      "<h3>" + c.titulo + (c.selo ? ' <span class="selo">' + c.selo + "</span>" : "") + "</h3>" +
+      '<p class="circuito">' + c.circuito + "</p></div>" +
+      (opts.mostrarParecer === false ? "" : '<span class="parecer ' + c.parecer + '">' + nomeParecer(c.parecer) + "</span>") +
+      "</div>";
+
+    if(c.mostrarMEF){
+      html += '<div class="caixa-alerta"><strong>Risco central — MV Experience Forum:</strong> o MEF ocorre em São Paulo nos dias 02 e 03/09. A disponibilidade de executivos, TI e lideranças dos clientes deve ser confirmada para as visitas de PUC-Campinas e Unimed Campinas.</div>';
+    }
+    if(c.aeroportoChegadaObs){
+      html += '<div class="caixa-alerta">' + c.aeroportoChegadaObs + '</div>';
+    }
+    if(c.aeroportoRetornoObs){
+      html += '<div class="caixa-alerta">' + c.aeroportoRetornoObs + '</div>';
+    }
+
+    // A. Resumo
+    html += '<h4 class="subsecao">A. Resumo do cenário</h4>';
+    html += '<div class="grid-resumo">' +
+      '<div class="item-resumo"><div class="rotulo">Período</div><div class="valor">' + c.periodo + '</div></div>' +
+      '<div class="item-resumo"><div class="rotulo">Circuito</div><div class="valor">' + c.circuito + '</div></div>' +
+      '<div class="item-resumo"><div class="rotulo">Aeroporto de chegada</div><div class="valor">' + LOCAIS[c.aeroportoChegada].nome + '</div></div>' +
+      '<div class="item-resumo"><div class="rotulo">Aeroporto de retorno</div><div class="valor">' + LOCAIS[c.aeroportoRetorno].nome + '</div></div>' +
+      '<div class="item-resumo"><div class="rotulo">Principal benefício</div><div class="valor">' + c.resumo.principalBeneficio + '</div></div>' +
+      '<div class="item-resumo"><div class="rotulo">Principal risco</div><div class="valor">' + c.resumo.principalRisco + '</div></div>' +
+      '</div>';
+    html += '<div class="condicao-aprovacao"><span class="rotulo">' + (opts.rotuloCondicao || "Condição necessária para aprovação") + '</span>' + c.resumo.condicaoAprovacao + '</div>';
+
+    // B. Agenda
+    html += '<h4 class="subsecao">B. Agenda diária</h4>';
+    html += '<button type="button" class="btn-toggle-todos" data-cenario="' + c.id + '">Expandir todos os dias</button>';
+    html += '<div class="timeline">';
+    c.dias.forEach(function(d, i){
+      html += '<details class="dia-timeline"' + (i===0 ? " open" : "") + '>';
+      html += '<summary><span>' + d.data + (d.pernoite && d.pernoite !== "—" ? " · pernoite em " + d.pernoite : "") + '</span><span class="seta">▸</span></summary>';
+      html += '<div class="corpo-dia">';
+      html += '<div class="bloco-periodo"><div class="rotulo">Manhã</div>' + (d.manha.length ? d.manha.map(linhaAgendaHTML).join("") : '<div class="atividade" style="color:var(--texto2);">Sem compromisso registrado</div>') + '</div>';
+      html += '<div class="bloco-periodo"><div class="rotulo">Tarde</div>' + (d.tarde.length ? d.tarde.map(linhaAgendaHTML).join("") : '<div class="atividade" style="color:var(--texto2);">Sem compromisso registrado</div>') + '</div>';
+      html += '<div class="translado-dia"><strong>Translado / pernoite:</strong> ' + d.translado + '</div>';
+      html += '</div></details>';
+    });
+    html += '</div>';
+
+    // C. Mapa — placeholder: o mapa Leaflet do controlador correspondente
+    // (principal ou histórico) é montado/movido para dentro deste slot.
+    html += '<h4 class="subsecao">C. Geolocalização e mapa interativo</h4>';
+    html += '<div class="mapa-slot" id="mapa-slot-' + c.id + '"></div>';
+
+    // D. Deslocamentos
+    html += '<h4 class="subsecao">D. Previsão de deslocamentos</h4>';
+    html += '<div class="tabela-scroll"><table id="tabela-trechos-' + c.id + '"><caption>Trechos intermunicipais do circuito — valores estimados, não são horários garantidos.</caption>' +
+      '<thead><tr><th scope="col">Origem</th><th scope="col">Destino</th><th scope="col">Distância de referência</th><th scope="col">Tempo planejado</th><th scope="col">Horário recomendado de saída</th><th scope="col">Risco</th><th scope="col">Orientação operacional</th></tr></thead><tbody>';
+    c.trechos.forEach(function(t, i){
+      html += '<tr data-leg="' + i + '"><td>' + t.origem + '</td><td>' + t.destino + '</td><td>' + t.distancia + '</td><td>' + t.tempo + '</td><td>' + t.saida + '</td><td><span class="badge-risco ' + t.risco + '">' + t.risco + '</span></td><td>' + t.orientacao + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<p class="aviso-tempo">' + AVISO_TEMPOS + '</p>';
+
+    // E. Hotéis
+    html += '<h4 class="subsecao">E. Hotéis sugeridos</h4>';
+    html += '<div class="cards-hoteis">';
+    c.hoteis.forEach(function(hid){
+      var h = LOCAIS[hid];
+      var noite = "";
+      c.dias.forEach(function(d){ if(d.pernoite === h.cidade) noite = d.data; });
+      html += '<div class="card-hotel' + (hid === "ibisParaiso" ? " referencia" : "") + '">' +
+        '<h4>' + h.nome + (hid === "ibisParaiso" ? ' <span class="selo">Padrão de referência</span>' : "") + '</h4>' +
+        '<div class="linha"><span class="rotulo">Cidade:</span> ' + h.cidade + '</div>' +
+        '<div class="linha"><span class="rotulo">Endereço:</span> ' + h.endereco + '</div>' +
+        '<div class="linha"><span class="rotulo">Noite prevista:</span> ' + (noite || "conforme circuito do cenário") + '</div>' +
+        '<div class="linha"><span class="rotulo">Relação com o roteiro:</span> ' + h.justificativa + '</div>' +
+        '<div class="linha" style="color:var(--alerta);">Tarifas, estacionamento, política de cancelamento e disponibilidade precisam ser cotados após a confirmação das visitas.</div>' +
+        '<a class="btn-link" href="' + h.url + '" target="_blank" rel="noopener noreferrer">Página oficial do hotel</a>' +
+        '</div>';
+    });
+    html += '</div>';
+
+    // F. Avaliação executiva
+    html += '<h4 class="subsecao">F. Avaliação executiva</h4>';
+    html += '<div class="grid-avaliacao">' +
+      '<div class="col-avaliacao favoravel"><h5>Pontos favoráveis</h5><ul>' + c.avaliacao.favoraveis.map(function(x){return "<li>"+x+"</li>";}).join("") + '</ul></div>' +
+      '<div class="col-avaliacao atencao"><h5>Pontos de atenção</h5><ul>' + c.avaliacao.atencao.map(function(x){return "<li>"+x+"</li>";}).join("") + '</ul></div>' +
+      '<div class="col-avaliacao risco"><h5>Riscos logísticos</h5><ul>' + c.avaliacao.riscos.map(function(x){return "<li>"+x+"</li>";}).join("") + '</ul></div>' +
+      '<div class="col-avaliacao dependencia"><h5>Dependências</h5><ul>' + c.avaliacao.dependencias.map(function(x){return "<li>"+x+"</li>";}).join("") + '</ul></div>' +
+      '</div>';
+    html += '<div class="condicao-aprovacao"><span class="rotulo">' + (opts.rotuloCondicao || "Condição para aprovação") + '</span>' + c.resumo.condicaoAprovacao + '</div>';
+
+    painel.innerHTML = html;
+    return painel;
+  }
+
+  function ligarControlesTrechosEAgenda(painel, c, controlador){
+    var btnToggleTodos = painel.querySelector(".btn-toggle-todos");
+    if(btnToggleTodos){
+      btnToggleTodos.addEventListener("click", function(){
+        var detalhes = painel.querySelectorAll(".dia-timeline");
+        var algumFechado = Array.prototype.some.call(detalhes, function(d){ return !d.open; });
+        detalhes.forEach(function(d){ d.open = algumFechado; });
+        btnToggleTodos.textContent = algumFechado ? "Recolher todos os dias" : "Expandir todos os dias";
+      });
+    }
+
+    var linhas = painel.querySelectorAll("tr[data-leg]");
+    linhas.forEach(function(tr){
+      tr.addEventListener("click", function(){
+        linhas.forEach(function(l){ l.classList.remove("linha-destaque"); });
+        tr.classList.add("linha-destaque");
+        if(controlador && controlador.leafletDisponivel && controlador.mapa && controlador.camadaRota){
+          controlador.camadaRota.eachLayer(function(l){ controlador.mapa.panTo(l.getBounds().getCenter()); });
+        }
+      });
+    });
+  }
+
+  /* =========================================================
+     MAPA — Leaflet, camadas, controles, popups
+     Cada seção (plano confirmado / histórico) tem seu próprio
+     controlador de mapa independente, criado pela fábrica abaixo.
+     ========================================================= */
+
+  function criarControladorMapa(sufixo){
+    var ctrl = {};
+    ctrl.mapa = null;
+    ctrl.camadaClientes = null;
+    ctrl.camadaHoteis = null;
+    ctrl.camadaAeroportos = null;
+    ctrl.camadaMEF = null;
+    ctrl.camadaRota = null;
+    ctrl.leafletDisponivel = (typeof L !== "undefined");
+    ctrl.idMapa = "mapa-" + sufixo;
+    ctrl.idContainer = "mapa-container-" + sufixo;
+    ctrl.idFallback = "fallback-mapa-" + sufixo;
+    ctrl.idLegendaMef = "legenda-mef-" + sufixo;
+    ctrl.secaoMapaEl = null;
+
+    ctrl.montarSecaoMapa = function(){
+      var el = document.createElement("div");
+      el.innerHTML =
+        '<div class="mapa-toolbar">' +
+        '<button type="button" class="btn-mapa" data-acao="ajustar" aria-label="Ajustar mapa ao roteiro">Ajustar ao roteiro</button>' +
+        '<button type="button" class="btn-mapa" data-acao="toggle-hoteis" aria-pressed="true" aria-label="Mostrar ou ocultar hotéis no mapa">Hotéis</button>' +
+        '<button type="button" class="btn-mapa" data-acao="toggle-aeroportos" aria-pressed="true" aria-label="Mostrar ou ocultar aeroportos no mapa">Aeroportos</button>' +
+        '<button type="button" class="btn-mapa" data-acao="toggle-clientes" aria-pressed="true" aria-label="Mostrar ou ocultar clientes no mapa">Clientes</button>' +
+        '<button type="button" class="btn-mapa" data-acao="expandir" aria-label="Expandir mapa para tela cheia">Expandir mapa</button>' +
+        '</div>' +
+        '<div class="mapa-container-el" id="' + ctrl.idContainer + '"><div class="mapa-el" id="' + ctrl.idMapa + '" role="application" aria-label="Mapa do roteiro de visitas"></div></div>' +
+        '<div class="fallback-mapa" id="' + ctrl.idFallback + '">O mapa interativo não pôde ser carregado (Leaflet ou os tiles do OpenStreetMap indisponíveis). As tabelas de endereços e deslocamentos abaixo continuam completas e podem ser consultadas normalmente.</div>' +
+        '<div class="legenda-mapa">' +
+        '<span><span class="ponto-legenda" style="background:var(--marcador-cliente);"></span>Clientes</span>' +
+        '<span><span class="ponto-legenda" style="background:var(--marcador-hotel);"></span>Hotéis</span>' +
+        '<span><span class="ponto-legenda" style="background:var(--marcador-aeroporto);"></span>Aeroportos</span>' +
+        '<span id="' + ctrl.idLegendaMef + '" style="display:none;"><span class="ponto-legenda" style="background:var(--marcador-mef);"></span>Transamerica Expo Center (referência MEF)</span>' +
+        '<span>— Linha: trajeto esquemático (sem serviço de roteamento)</span>' +
+        '</div>';
+
+      el.querySelector('[data-acao="ajustar"]').addEventListener("click", function(){ ctrl.ajustarRota(); });
+
+      function ligarToggle(acao, getCamada){
+        var btn = el.querySelector('[data-acao="' + acao + '"]');
+        btn.addEventListener("click", function(){
+          var ativo = btn.getAttribute("aria-pressed") === "true";
+          btn.setAttribute("aria-pressed", String(!ativo));
+          if(!ctrl.leafletDisponivel || !ctrl.mapa) return;
+          var camada = getCamada();
+          if(ativo){ ctrl.mapa.removeLayer(camada); } else { camada.addTo(ctrl.mapa); }
+        });
+      }
+      ligarToggle("toggle-hoteis", function(){ return ctrl.camadaHoteis; });
+      ligarToggle("toggle-aeroportos", function(){ return ctrl.camadaAeroportos; });
+      ligarToggle("toggle-clientes", function(){ return ctrl.camadaClientes; });
+
+      var btnExpandir = el.querySelector('[data-acao="expandir"]');
+      btnExpandir.addEventListener("click", function(){
+        var container = el.querySelector("#" + ctrl.idContainer);
+        container.classList.toggle("expandido");
+        btnExpandir.textContent = container.classList.contains("expandido") ? "Recolher mapa" : "Expandir mapa";
+        setTimeout(function(){ if(ctrl.mapa) ctrl.mapa.invalidateSize(); }, 60);
+      });
+
+      ctrl.secaoMapaEl = el;
+      return el;
+    };
+
+    ctrl.criarMapa = function(){
+      if(!ctrl.leafletDisponivel){
+        var fb = document.getElementById(ctrl.idFallback);
+        var cc = document.getElementById(ctrl.idContainer);
+        if(fb) fb.style.display = "block";
+        if(cc) cc.style.display = "none";
+        return;
+      }
+      try{
+        ctrl.mapa = L.map(ctrl.idMapa, {scrollWheelZoom:true});
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 18,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+        }).addTo(ctrl.mapa);
+        ctrl.camadaClientes = L.layerGroup().addTo(ctrl.mapa);
+        ctrl.camadaHoteis = L.layerGroup().addTo(ctrl.mapa);
+        ctrl.camadaAeroportos = L.layerGroup().addTo(ctrl.mapa);
+        ctrl.camadaMEF = L.layerGroup().addTo(ctrl.mapa);
+        ctrl.camadaRota = L.layerGroup().addTo(ctrl.mapa);
+      } catch(e){
+        ctrl.leafletDisponivel = false;
+        var fb2 = document.getElementById(ctrl.idFallback);
+        var cc2 = document.getElementById(ctrl.idContainer);
+        if(fb2) fb2.style.display = "block";
+        if(cc2) cc2.style.display = "none";
+      }
+    };
+
+    ctrl.atualizarMapa = function(c){
+      if(!ctrl.leafletDisponivel || !ctrl.mapa) return;
+      ctrl.camadaClientes.clearLayers();
+      ctrl.camadaHoteis.clearLayers();
+      ctrl.camadaAeroportos.clearLayers();
+      ctrl.camadaMEF.clearLayers();
+      ctrl.camadaRota.clearLayers();
+
+      var pontosRota = [];
+      var ordemCliente = 0;
+
+      c.rota.forEach(function(locId){
+        var loc = LOCAIS[locId];
+        pontosRota.push([loc.lat, loc.lng]);
+
+        if(loc.tipo === "cliente"){
+          ordemCliente++;
+          var horarioTexto = "consultar agenda diária";
+          c.dias.forEach(function(d){
+            d.manha.concat(d.tarde).forEach(function(item){
+              if(item.localId === locId) horarioTexto = d.data + " · " + item.horario;
+            });
+          });
+          var proximoTempo = "—";
+          if(c.trechos[ordemCliente-1]) proximoTempo = c.trechos[ordemCliente-1].tempo;
+          var marker = L.marker([loc.lat, loc.lng], {icon: marcadorCircular(iconeCor("cliente"), ordemCliente), alt: loc.nome});
+          marker.bindPopup(popupCliente(loc, ordemCliente, c, horarioTexto, proximoTempo));
+          marker.addTo(ctrl.camadaClientes);
+        } else if(loc.tipo === "hotel"){
+          var mh = L.marker([loc.lat, loc.lng], {icon: marcadorCircular(iconeCor("hotel")), alt: loc.nome});
+          mh.bindPopup(popupHotel(loc, c));
+          mh.addTo(ctrl.camadaHoteis);
+        } else if(loc.tipo === "aeroporto"){
+          var aeroportoJaExiste = false;
+          ctrl.camadaAeroportos.eachLayer(function(l){ if(l.getLatLng().lat === loc.lat && l.getLatLng().lng === loc.lng) aeroportoJaExiste = true; });
+          if(!aeroportoJaExiste){
+            var ma = L.marker([loc.lat, loc.lng], {icon: marcadorCircular(iconeCor("aeroporto")), alt: loc.nome});
+            ma.bindPopup(popupAeroporto(loc));
+            ma.addTo(ctrl.camadaAeroportos);
+          }
+        }
+      });
+
+      // Hotéis do cenário que não estão na rota diretamente (garantir presença no mapa)
+      c.hoteis.forEach(function(hid){
+        var loc = LOCAIS[hid];
+        var jaExiste = false;
+        ctrl.camadaHoteis.eachLayer(function(l){ if(l.getLatLng().lat === loc.lat && l.getLatLng().lng === loc.lng) jaExiste = true; });
+        if(!jaExiste){
+          var mh = L.marker([loc.lat, loc.lng], {icon: marcadorCircular(iconeCor("hotel")), alt: loc.nome});
+          mh.bindPopup(popupHotel(loc, c));
+          mh.addTo(ctrl.camadaHoteis);
+        }
+      });
+
+      if(c.mostrarMEF){
+        var mef = LOCAIS.transamerica;
+        var mm = L.marker([mef.lat, mef.lng], {icon: marcadorCircular(iconeCor("mef")), alt: mef.nome});
+        mm.bindPopup('<div class="popup-leaflet-custom"><h4>' + mef.nome + '</h4><span class="aviso-aprox">Localização aproximada — referência do MV Experience Forum</span><div>' + mef.endereco + '</div></div>');
+        mm.addTo(ctrl.camadaMEF);
+      }
+
+      if(pontosRota.length > 1){
+        L.polyline(pontosRota, {color:"#173A5E", weight:3, dashArray:"6,6", opacity:0.75}).addTo(ctrl.camadaRota)
+          .bindPopup("Trajeto esquemático — representa a sequência do circuito, não a rota exata pelas rodovias.");
+      }
+
+      var legendaMef = document.getElementById(ctrl.idLegendaMef);
+      if(legendaMef){ legendaMef.style.display = c.mostrarMEF ? "flex" : "none"; }
+
+      ctrl.ajustarRota();
+      setTimeout(function(){ if(ctrl.mapa) ctrl.mapa.invalidateSize(); }, 50);
+    };
+
+    ctrl.ajustarRota = function(){
+      if(!ctrl.leafletDisponivel || !ctrl.mapa) return;
+      var bounds = [];
+      ctrl.camadaClientes.eachLayer(function(l){ bounds.push(l.getLatLng()); });
+      ctrl.camadaHoteis.eachLayer(function(l){ bounds.push(l.getLatLng()); });
+      ctrl.camadaAeroportos.eachLayer(function(l){ bounds.push(l.getLatLng()); });
+      ctrl.camadaMEF.eachLayer(function(l){ bounds.push(l.getLatLng()); });
+      if(bounds.length){
+        ctrl.mapa.fitBounds(L.latLngBounds(bounds), {padding:[30,30]});
+      }
+    };
+
+    return ctrl;
+  }
+
+  function marcadorCircular(cor, numero){
+    var texto = numero ? String(numero) : "";
+    return L.divIcon({
+      className: "",
+      html: '<div style="background:' + cor + ';color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.4);">' + texto + '</div>',
+      iconSize:[24,24],
+      iconAnchor:[12,12],
+      popupAnchor:[0,-12]
+    });
+  }
+
+  function linkGoogleMaps(loc){
+    return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(loc.endereco);
+  }
+
+  function popupCliente(loc, ordem, cenario, horarioVisita, proximoTempo){
+    var avisoAprox = loc.aproximado ? '<span class="aviso-aprox">Localização aproximada — confirmar unidade</span>' : "";
+    var avisoPendente = loc.pendente ? '<span class="aviso-aprox">PENDENTE — unidade e endereço da reunião ainda não definidos</span>' : "";
+    var avisoConfirmar = loc.pendenteConfirmacao ? '<span class="aviso-aprox">' + loc.pendenteConfirmacao + '</span>' : "";
+    return '<div class="popup-leaflet-custom"><h4>' + loc.nome + '</h4>' +
+      avisoPendente + avisoConfirmar + avisoAprox +
+      '<div>' + loc.endereco + '</div>' +
+      '<div><strong>Cidade:</strong> ' + loc.cidade + '</div>' +
+      '<div><strong>Data/horário da visita:</strong> ' + horarioVisita + '</div>' +
+      '<div><strong>Ordem no circuito:</strong> ' + ordem + '</div>' +
+      '<div><strong>Tempo estimado até o próximo ponto:</strong> ' + (proximoTempo || "consultar tabela de deslocamentos") + '</div>' +
+      '<a href="' + linkGoogleMaps(loc) + '" target="_blank" rel="noopener noreferrer">Abrir rota no Google Maps</a>' +
+      '</div>';
+  }
+
+  function popupHotel(loc, cenario){
+    var avisoAprox = loc.aproximado ? '<span class="aviso-aprox">Localização aproximada — confirmar unidade</span>' : "";
+    var noite = "";
+    cenario.dias.forEach(function(d){ if(d.pernoite === loc.cidade) noite = d.data; });
+    return '<div class="popup-leaflet-custom"><h4>' + loc.nome + '</h4>' +
+      avisoAprox +
+      '<div>' + loc.endereco + '</div>' +
+      '<div><strong>Cidade:</strong> ' + loc.cidade + '</div>' +
+      '<div><strong>Noite prevista:</strong> ' + (noite || "conforme circuito do cenário") + '</div>' +
+      '<div><strong>Justificativa geográfica:</strong> ' + loc.justificativa + '</div>' +
+      '<a href="' + loc.url + '" target="_blank" rel="noopener noreferrer">Página oficial do hotel</a>' +
+      '</div>';
+  }
+
+  function popupAeroporto(loc){
+    return '<div class="popup-leaflet-custom"><h4>' + loc.nome + '</h4>' +
+      '<div>' + loc.endereco + '</div>' +
+      '<a href="' + linkGoogleMaps(loc) + '" target="_blank" rel="noopener noreferrer">Abrir no Google Maps</a>' +
+      '</div>';
+  }
+
+  /* =========================================================
+     MONTAGEM — plano confirmado (Cenário 1, sempre visível)
+     ========================================================= */
+
+  var controladorPrincipal = criarControladorMapa("principal");
+
+  function montarPrimario(){
+    var c1 = CENARIOS[0];
+    var wrap = document.getElementById("painel-cenario-principal");
+    var painel = montarPainelCenario(c1, {
+      comAbas: false,
+      mostrarParecer: false,
+      rotuloCondicao: "Pontos de atenção para a execução"
+    });
+    wrap.appendChild(painel);
+    ligarControlesTrechosEAgenda(painel, c1, controladorPrincipal);
+
+    var slot = document.getElementById("mapa-slot-" + c1.id);
+    slot.appendChild(controladorPrincipal.montarSecaoMapa());
+    controladorPrincipal.criarMapa();
+    setTimeout(function(){
+      if(controladorPrincipal.mapa) controladorPrincipal.mapa.invalidateSize();
+      controladorPrincipal.atualizarMapa(c1);
+    }, 30);
+  }
+
+  /* =========================================================
+     MONTAGEM — histórico de cenários avaliados (C2 e C3)
+     ========================================================= */
+
+  var controladorHistorico = criarControladorMapa("historico");
+  var HISTORICO_CENARIOS = [CENARIOS[1], CENARIOS[2]];
+  var cenarioHistoricoAtivo = "c2";
+
+  function selecionarCenarioHistorico(id, focar){
+    cenarioHistoricoAtivo = id;
+
+    HISTORICO_CENARIOS.forEach(function(c){
+      var aba = document.getElementById("aba-" + c.id);
+      var ativo = c.id === id;
+      aba.setAttribute("aria-selected", String(ativo));
+      aba.setAttribute("tabindex", ativo ? "0" : "-1");
+      document.getElementById("painel-" + c.id).hidden = !ativo;
+    });
+
+    var c = HISTORICO_CENARIOS.find(function(x){ return x.id === id; });
+
+    var slot = document.getElementById("mapa-slot-" + id);
+    if(controladorHistorico.secaoMapaEl && slot){ slot.appendChild(controladorHistorico.secaoMapaEl); }
+
+    setTimeout(function(){
+      if(controladorHistorico.mapa) controladorHistorico.mapa.invalidateSize();
+      controladorHistorico.atualizarMapa(c);
+    }, 30);
+
+    if(focar){
+      document.getElementById("painel-" + id).scrollIntoView({behavior:"smooth", block:"start"});
+    }
+  }
+
+  function montarHistorico(){
+    montarTabelaComparativo();
+
+    var nav = document.getElementById("nav-cenarios");
+    HISTORICO_CENARIOS.forEach(function(c){
+      var btn = document.createElement("button");
+      btn.className = "aba-cenario";
+      btn.type = "button";
+      btn.role = "tab";
+      btn.id = "aba-" + c.id;
+      btn.setAttribute("aria-controls", "painel-" + c.id);
+      btn.setAttribute("aria-selected", c.id === cenarioHistoricoAtivo ? "true" : "false");
+      btn.setAttribute("tabindex", c.id === cenarioHistoricoAtivo ? "0" : "-1");
+      btn.textContent = c.titulo + (c.selo ? " ★" : "");
+      btn.addEventListener("click", function(){ selecionarCenarioHistorico(c.id, true); });
+      btn.addEventListener("keydown", function(e){
+        if(e.key === "ArrowRight" || e.key === "ArrowLeft"){
+          var idx = HISTORICO_CENARIOS.findIndex(function(x){return x.id===c.id;});
+          var novo = e.key === "ArrowRight" ? (idx+1)%HISTORICO_CENARIOS.length : (idx-1+HISTORICO_CENARIOS.length)%HISTORICO_CENARIOS.length;
+          selecionarCenarioHistorico(HISTORICO_CENARIOS[novo].id, true);
+          document.getElementById("aba-"+HISTORICO_CENARIOS[novo].id).focus();
+          e.preventDefault();
+        }
+      });
+      nav.appendChild(btn);
+    });
+
+    var wrap = document.getElementById("paineis-cenarios-historico");
+    HISTORICO_CENARIOS.forEach(function(c){
+      var painel = montarPainelCenario(c, {
+        comAbas: true,
+        idAtivoPadrao: cenarioHistoricoAtivo,
+        avisoNaoAdotado: true,
+        mostrarParecer: true,
+        rotuloCondicao: "Condição avaliada na época"
+      });
+      wrap.appendChild(painel);
+      ligarControlesTrechosEAgenda(painel, c, controladorHistorico);
+    });
+
+    var cAtivo = HISTORICO_CENARIOS.find(function(x){ return x.id === cenarioHistoricoAtivo; });
+    var slotAtivo = document.getElementById("mapa-slot-" + cenarioHistoricoAtivo);
+    slotAtivo.appendChild(controladorHistorico.montarSecaoMapa());
+    controladorHistorico.criarMapa();
+    setTimeout(function(){
+      if(controladorHistorico.mapa) controladorHistorico.mapa.invalidateSize();
+      controladorHistorico.atualizarMapa(cAtivo);
+    }, 30);
+
+    // O mapa é criado enquanto o <details> ainda pode estar fechado (dimensão zero);
+    // ao abrir, corrige o tamanho e reencaixa o roteiro no cenário ativo.
+    var detalhesHistorico = document.querySelector(".secao-historico");
+    if(detalhesHistorico){
+      detalhesHistorico.addEventListener("toggle", function(){
+        if(detalhesHistorico.open && controladorHistorico.mapa){
+          setTimeout(function(){
+            controladorHistorico.mapa.invalidateSize();
+            var atual = HISTORICO_CENARIOS.find(function(x){ return x.id === cenarioHistoricoAtivo; });
+            controladorHistorico.atualizarMapa(atual);
+          }, 30);
+        }
+      });
+    }
+  }
+
+  /* =========================================================
+     INICIALIZAÇÃO
+     ========================================================= */
+
+  function iniciar(){
+    montarPrimario();
+    montarHistorico();
+
+    montarFiltrosStatus();
+    montarChecklist();
+    montarResumoChecklist();
+    ligarControlesChecklist();
+
+    montarFiltrosAta();
+    montarAta();
+    montarResumoAta();
+    ligarControlesAta();
+
+    document.getElementById("btn-imprimir").addEventListener("click", function(){
+      window.print();
+    });
+
+    window.addEventListener("resize", function(){
+      if(controladorPrincipal.mapa) controladorPrincipal.mapa.invalidateSize();
+      if(controladorHistorico.mapa) controladorHistorico.mapa.invalidateSize();
+    });
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", iniciar);
+  } else {
+    iniciar();
+  }
+
+})();
+</script>
+</body>
+</html>
