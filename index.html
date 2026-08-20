@@ -561,10 +561,11 @@
   <section aria-labelledby="titulo-estrategia">
     <div class="caixa-recomendacao">
       <h2 id="titulo-estrategia"><span class="selo">Plano confirmado</span></h2>
-      <p>Roteiro adotado: <strong>São Paulo → Sorocaba → Salto/Itu → Campinas → São Paulo</strong>, de <strong>31/08 a 04/09/2026</strong>. Passagens aéreas já emitidas (Congonhas ↔ Recife).</p>
+      <p>Roteiro adotado: <strong>São Paulo → Sorocaba → São Carlos → Catanduva → São Paulo</strong>, de <strong>31/08 a 04/09/2026</strong>. Passagens aéreas já emitidas (Congonhas ↔ Recife).</p>
       <ul>
-        <li>Sete clientes prioritários confirmados no roteiro, mais Unimed Salto/Itu.</li>
-        <li>Atenção operacional: o MV Experience Forum (MEF) ocorre em São Paulo nos dias 02 e 03/09, coincidindo com as visitas a PUC-Campinas e Unimed Campinas — confirmar a disponibilidade dos interlocutores antes da semana da viagem.</li>
+        <li>HCor, BOS, Hospital Evangélico de Sorocaba, Unimed Sorocaba e Hospital Edmundo Vasconcelos seguem confirmados ou em andamento.</li>
+        <li>PUC-Campinas, Unimed Campinas e Unimed Salto/Itu não confirmaram agenda e saíram do roteiro. Em seus lugares, entraram dois novos clientes em prospecção: Santa Casa de São Carlos (contato: Lucas Marini) e Padre Albino, em Catanduva — ambos ainda sem agenda fechada.</li>
+        <li>Atenção operacional: hotéis em São Carlos e Catanduva ainda precisam ser definidos, e o maior trecho de deslocamento do circuito (Catanduva → São Paulo, ≈385 km) acontece na quinta-feira.</li>
         <li>Este material reúne agenda diária, mapa do roteiro, hospedagens, previsão de deslocamentos, contatos dos clientes e o registro das conversas após cada visita.</li>
       </ul>
     </div>
@@ -752,6 +753,18 @@
       endereco:"Rua Santa Cruz, 620, Centro, Limeira — SP",
       cidade:"Limeira", lat:-22.5650, lng:-47.4020, aproximado:true
     },
+    santaCasaSaoCarlos: {
+      id:"santaCasaSaoCarlos", tipo:"cliente", nome:"Santa Casa de São Carlos",
+      endereco:"São Carlos — SP (endereço exato a confirmar)",
+      cidade:"São Carlos", lat:-22.0175, lng:-47.8908, aproximado:true,
+      pendenteConfirmacao:"Agenda em negociação com Lucas Marini — endereço exato da unidade a confirmar."
+    },
+    padreAlbino: {
+      id:"padreAlbino", tipo:"cliente", nome:"Padre Albino (Fundação Padre Albino)",
+      endereco:"Catanduva — SP (endereço exato a confirmar)",
+      cidade:"Catanduva", lat:-21.1378, lng:-48.9728, aproximado:true,
+      pendenteConfirmacao:"Agenda ainda em negociação — endereço exato da unidade a confirmar."
+    },
     ibisParaiso: {
       id:"ibisParaiso", tipo:"hotel", nome:"ibis budget São Paulo Paraíso",
       endereco:"Rua Vergueiro, 1571, Paraíso, São Paulo — SP",
@@ -779,6 +792,18 @@
       cidade:"Campinas", lat:-22.9060, lng:-47.0625, aproximado:true,
       url:"https://all.accor.com/hotel/7395/index.pt.shtml",
       justificativa:"Acesso central a PUC-Campinas e Unimed Campinas, com rota direta à Viracopos."
+    },
+    hotelSaoCarlos: {
+      id:"hotelSaoCarlos", tipo:"hotel", nome:"Hotel em São Carlos (a definir)",
+      endereco:"São Carlos — SP (hotel ainda não escolhido)",
+      cidade:"São Carlos", lat:-22.0175, lng:-47.8908, aproximado:true, pendente:true,
+      justificativa:"Hospedagem para viabilizar a visita à Santa Casa de São Carlos na manhã seguinte."
+    },
+    hotelCatanduva: {
+      id:"hotelCatanduva", tipo:"hotel", nome:"Hotel em Catanduva (a definir)",
+      endereco:"Catanduva — SP (hotel ainda não escolhido)",
+      cidade:"Catanduva", lat:-21.1378, lng:-48.9728, aproximado:true, pendente:true,
+      justificativa:"Hospedagem para viabilizar a visita ao Padre Albino na manhã seguinte."
     },
     congonhas: {
       id:"congonhas", tipo:"aeroporto", nome:"Aeroporto de Congonhas (CGH)",
@@ -811,6 +836,9 @@
   var TRECHOS_REFERENCIA = {
     "sp-sorocaba": {origem:"São Paulo", destino:"Sorocaba", distancia:"≈ 95 km", tempo:"1h40–2h10", risco:"moderado", orientacao:"Sair após o último compromisso; evitar pico de saída de SP (17h–19h) pela Castelo Branco."},
     "sorocaba-saltoitu": {origem:"Sorocaba", destino:"Salto/Itu", distancia:"≈ 45 km", tempo:"50min–1h10", risco:"baixo", orientacao:"Trecho tranquilo pela Castelo Branco/SP-300; poucas variações de trânsito."},
+    "sorocaba-saocarlos": {origem:"Sorocaba", destino:"São Carlos", distancia:"≈ 197 km", tempo:"≈ 2h14", risco:"moderado", orientacao:"Sair logo após a última visita em Sorocaba para não chegar tarde em São Carlos."},
+    "saocarlos-catanduva": {origem:"São Carlos", destino:"Catanduva", distancia:"≈ 155 km", tempo:"≈ 1h42", risco:"baixo", orientacao:"Trecho intermediário, sem pontos críticos conhecidos; ainda assim revalidar antes da saída."},
+    "catanduva-sp": {origem:"Catanduva", destino:"São Paulo", distancia:"≈ 385 km", tempo:"≈ 4h07", risco:"alto", orientacao:"Maior trecho do circuito; sair logo após a visita ao Padre Albino para não empurrar esse deslocamento para o dia do voo."},
     "saltoitu-campinas": {origem:"Salto/Itu", destino:"Campinas", distancia:"≈ 55 km", tempo:"1h–1h20", risco:"moderado", orientacao:"Conferir obras/lentidão na SP-101/SP-075 antes da saída."},
     "campinas-sp": {origem:"Campinas", destino:"São Paulo", distancia:"≈ 100 km", tempo:"1h30–2h", risco:"alto", orientacao:"Anhanguera/Bandeirantes com forte variação; evitar saída após 17h em dia útil."},
     "campinas-limeira": {origem:"Campinas", destino:"Limeira", distancia:"≈ 40 km", tempo:"45min–1h", risco:"baixo", orientacao:"Trecho estável pela SP-332 (Rodovia Governador Adhemar de Barros)."},
@@ -826,40 +854,40 @@
       numero:1,
       titulo:"Cenário 1 — Semana de 31/08",
       periodo:"31/08 a 04/09/2026",
-      circuito:"São Paulo → Sorocaba → Salto/Itu → Campinas → São Paulo",
+      circuito:"São Paulo → Sorocaba → São Carlos → Catanduva → São Paulo",
       aeroportoChegada:"congonhas",
       aeroportoRetorno:"congonhas",
       pernoites:4,
-      exposicaoMEF:"Alta — coincide com 02 e 03/09",
+      exposicaoMEF:"Nenhuma — Campinas saiu do roteiro",
       riscoLogistico:"Alto",
       parecer:"condicionado",
       selo:null,
-      mostrarMEF:true,
+      mostrarMEF:false,
       resumo:{
-        principalBeneficio:"Preserva as passagens aéreas já adquiridas (chegada e saída por Congonhas) e mantém os sete clientes prioritários mais Unimed Salto/Itu.",
-        principalRisco:"O MV Experience Forum ocorre em São Paulo nos dias 02 e 03/09, coincidindo com as visitas a PUC-Campinas e Unimed Campinas — interlocutores podem estar indisponíveis.",
-        condicaoAprovacao:"Confirmar com PUC-Campinas, Unimed Campinas e Unimed Salto/Itu a disponibilidade dos interlocutores-chave nas datas do MEF (02 e 03/09). O roteiro já está confirmado e as passagens emitidas — não há plano de migração para outra semana."
+        principalBeneficio:"Substitui PUC-Campinas e Unimed Campinas — que não confirmaram agenda — por dois novos clientes em prospecção (Santa Casa de São Carlos e Padre Albino), sem aumentar muito a distância do trajeto original e sem mais conflito com o MV Experience Forum.",
+        principalRisco:"São Carlos e Catanduva são contatos novos, ainda sem agenda confirmada, e o maior trecho de deslocamento do circuito (Catanduva → São Paulo, ≈385 km) acontece na quinta-feira.",
+        condicaoAprovacao:"Confirmar agenda com Lucas Marini (Santa Casa de São Carlos) e com o Padre Albino antes de reservar hospedagem em São Carlos e Catanduva — nenhum dos dois hotéis foi escolhido ainda."
       },
       dias:[
         {data:"Segunda, 31/08", manha:[{texto:"Chegada a Congonhas — voo já adquirido", horario:""}], tarde:[visita("hcor","14h30–16h30","Fernando Bicudo")], translado:"Após 17h: São Paulo → Sorocaba • pernoite em Sorocaba (ibis budget Sorocaba)", pernoite:"Sorocaba"},
-        {data:"Terça, 01/09", manha:[visita("bos","08h30–10h","Carla Maria")], tarde:[visita("evangelico","10h45–12h15","Carla Maria (participação a confirmar)"), visita("unimedSorocaba","14h–16h","Carla Maria")], translado:"Após 16h30: Sorocaba → Salto/Itu • pernoite na região (ibis Itu Plaza Shopping)", pernoite:"Salto/Itu"},
-        {data:"Quarta, 02/09", manha:[visita("unimedSaltoItu","09h–11h")], tarde:[{texto:"Margem para contingência e trabalho interno", horario:""}], translado:"Após 17h: Salto/Itu → Campinas • pernoite em Campinas (ibis budget Campinas Aquidaban)", pernoite:"Campinas"},
-        {data:"Quinta, 03/09", manha:[visita("pucCampinas","09h–11h")], tarde:[visita("unimedCampinas","14h–16h")], translado:"Após 16h30: Campinas → São Paulo • ibis budget Paraíso", pernoite:"São Paulo"},
+        {data:"Terça, 01/09", manha:[visita("bos","08h30–10h","Carla Maria")], tarde:[visita("evangelico","10h45–12h15","Carla Maria (participação a confirmar)"), visita("unimedSorocaba","14h–16h","Carla Maria")], translado:"Após 16h30: Sorocaba → São Carlos (≈197 km, ≈2h14) • pernoite em São Carlos (hotel a definir)", pernoite:"São Carlos"},
+        {data:"Quarta, 02/09", manha:[visita("santaCasaSaoCarlos","a definir — agenda em negociação com Lucas Marini")], tarde:[{texto:"Deslocamento para Catanduva", horario:""}], translado:"São Carlos → Catanduva (≈155 km, ≈1h42) • pernoite em Catanduva (hotel a definir)", pernoite:"Catanduva"},
+        {data:"Quinta, 03/09", manha:[visita("padreAlbino","a definir — agenda em negociação")], tarde:[{texto:"Deslocamento Catanduva → São Paulo, saindo logo após a visita", horario:""}], translado:"Catanduva → São Paulo (≈385 km, ≈4h07) • ibis budget Paraíso", pernoite:"São Paulo"},
         {data:"Sexta, 04/09", manha:[visita("hev","até 10h (visita curta)")], tarde:[{texto:"Congonhas → Recife — voo já adquirido às 14h35", horario:"14h35"}], translado:"Check-out antes da visita; seguir ao aeroporto até 11h", pernoite:"—"}
       ],
-      rota:["congonhas","hcor","bos","evangelico","unimedSorocaba","unimedSaltoItu","pucCampinas","unimedCampinas","hev","congonhas"],
-      hoteis:["ibisSorocaba","ibisItu","ibisCampinas","ibisParaiso"],
+      rota:["congonhas","hcor","bos","evangelico","unimedSorocaba","santaCasaSaoCarlos","padreAlbino","hev","congonhas"],
+      hoteis:["ibisSorocaba","hotelSaoCarlos","hotelCatanduva","ibisParaiso"],
       trechos:[
         Object.assign({saida:"Após 17h (segunda)"}, TRECHOS_REFERENCIA["sp-sorocaba"]),
-        Object.assign({saida:"Após 16h30 (terça)"}, TRECHOS_REFERENCIA["sorocaba-saltoitu"]),
-        Object.assign({saida:"Após 17h (quarta)"}, TRECHOS_REFERENCIA["saltoitu-campinas"]),
-        Object.assign({saida:"Após 16h30 (quinta)"}, TRECHOS_REFERENCIA["campinas-sp"])
+        Object.assign({saida:"Após 16h30 (terça)"}, TRECHOS_REFERENCIA["sorocaba-saocarlos"]),
+        Object.assign({saida:"Logo após a visita (quarta)"}, TRECHOS_REFERENCIA["saocarlos-catanduva"]),
+        Object.assign({saida:"Logo após a visita (quinta)"}, TRECHOS_REFERENCIA["catanduva-sp"])
       ],
       avaliacao:{
-        favoraveis:["Preserva as passagens previamente adquiridas e mantém os sete clientes prioritários.","As viagens longas permanecem concentradas no fim da tarde e início da noite."],
-        atencao:["PUC-Campinas e Unimed Campinas coincidem com o segundo dia do MEF; interlocutores podem estar indisponíveis.","HEV na sexta precisa encerrar cedo por causa do voo das 14h35.","Limeira não cabe com segurança neste desenho."],
-        riscos:["Exposição direta ao MV Experience Forum em 02 e 03/09.","Dependência de confirmação de agenda de três clientes na mesma semana do evento."],
-        dependencias:["Confirmação de PUC-Campinas, Unimed Campinas e Unimed Salto/Itu.","Manutenção da malha aérea já emitida (Congonhas–Recife)."]
+        favoraveis:["São Carlos fica praticamente no caminho direto entre Sorocaba e Catanduva — a rota quase não fica mais longa do que o trajeto original.","Elimina a exposição ao MV Experience Forum, já que Campinas sai do roteiro.","Mantém HCor, BOS, Hospital Evangélico de Sorocaba e Unimed Sorocaba — os clientes já confirmados ou em andamento."],
+        atencao:["Santa Casa de São Carlos e Padre Albino ainda não confirmaram agenda — são contatos novos.","Hotéis em São Carlos e Catanduva ainda não foram definidos.","O trecho Catanduva → São Paulo (≈385 km, ≈4h07) é o maior do circuito e acontece na quinta-feira."],
+        riscos:["Sem confirmação de Lucas Marini e do Padre Albino, dois dos cinco dias do roteiro ficam sem visita fechada.","Atraso na saída de Catanduva pode comprometer a chegada em São Paulo na quinta à noite, véspera do voo."],
+        dependencias:["Confirmação de agenda com Lucas Marini (Santa Casa de São Carlos).","Confirmação de agenda com o Padre Albino.","Reserva de hospedagem em São Carlos e Catanduva."]
       }
     },
     {
@@ -956,15 +984,17 @@
      ========================================================= */
 
   var CHECKLIST_CLIENTES = [
-    {localId:"hcor", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Fernando Bicudo"},
+    {localId:"hcor", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Fernando Bicudo", statusSugerido:"confirmado"},
     {localId:"hev", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
     {localId:"bos", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria"},
     {localId:"evangelico", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria"},
     {localId:"unimedSorocaba", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"Carla Maria"},
-    {localId:"unimedSaltoItu", prioridade:"encaixe", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
-    {localId:"pucCampinas", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
-    {localId:"unimedCampinas", prioridade:"prioritario", cenarios:"C1, C2, C3", responsavelSugerido:"João / Ana Carla"},
-    {localId:"unimedLimeira", prioridade:"encaixe", cenarios:"C2 (encaixe opcional)", responsavelSugerido:"João / Ana Carla"}
+    {localId:"santaCasaSaoCarlos", prioridade:"prioritario", cenarios:"C1", responsavelSugerido:"João / Ana Carla", contatoSugerido:"Lucas Marini"},
+    {localId:"padreAlbino", prioridade:"prioritario", cenarios:"C1", responsavelSugerido:"João / Ana Carla"},
+    {localId:"unimedSaltoItu", prioridade:"encaixe", cenarios:"C2, C3 (histórico — fora do Cenário 1 atual)", responsavelSugerido:"João / Ana Carla"},
+    {localId:"pucCampinas", prioridade:"prioritario", cenarios:"C2, C3 (histórico — fora do Cenário 1 atual)", responsavelSugerido:"João / Ana Carla"},
+    {localId:"unimedCampinas", prioridade:"prioritario", cenarios:"C2, C3 (histórico — fora do Cenário 1 atual)", responsavelSugerido:"João / Ana Carla"},
+    {localId:"unimedLimeira", prioridade:"encaixe", cenarios:"C2 (encaixe opcional, histórico)", responsavelSugerido:"João / Ana Carla"}
   ];
 
   var CHECKLIST_STORAGE_KEY = "intelectah_checklist_visitas_sp_v1";
@@ -994,11 +1024,11 @@
   function estadoLinha(item){
     var salvo = checklistDados[item.localId] || {};
     return {
-      nomeContato: salvo.nomeContato || "",
+      nomeContato: salvo.nomeContato || item.contatoSugerido || "",
       cargo: salvo.cargo || "",
       celular: salvo.celular || "",
       email: salvo.email || "",
-      status: salvo.status || "pendente",
+      status: salvo.status || item.statusSugerido || "pendente",
       ultimaAtualizacao: salvo.ultimaAtualizacao || "",
       observacoes: salvo.observacoes || ""
     };
@@ -1512,13 +1542,13 @@
       var noite = "";
       c.dias.forEach(function(d){ if(d.pernoite === h.cidade) noite = d.data; });
       html += '<div class="card-hotel' + (hid === "ibisParaiso" ? " referencia" : "") + '">' +
-        '<h4>' + h.nome + (hid === "ibisParaiso" ? ' <span class="selo">Padrão de referência</span>' : "") + '</h4>' +
+        '<h4>' + h.nome + (hid === "ibisParaiso" ? ' <span class="selo">Padrão de referência</span>' : "") + (h.pendente ? ' <span class="tag-pendente">Pendente</span>' : "") + '</h4>' +
         '<div class="linha"><span class="rotulo">Cidade:</span> ' + h.cidade + '</div>' +
         '<div class="linha"><span class="rotulo">Endereço:</span> ' + h.endereco + '</div>' +
         '<div class="linha"><span class="rotulo">Noite prevista:</span> ' + (noite || "conforme circuito do cenário") + '</div>' +
         '<div class="linha"><span class="rotulo">Relação com o roteiro:</span> ' + h.justificativa + '</div>' +
         '<div class="linha" style="color:var(--alerta);">Tarifas, estacionamento, política de cancelamento e disponibilidade precisam ser cotados após a confirmação das visitas.</div>' +
-        '<a class="btn-link" href="' + h.url + '" target="_blank" rel="noopener noreferrer">Página oficial do hotel</a>' +
+        (h.url ? '<a class="btn-link" href="' + h.url + '" target="_blank" rel="noopener noreferrer">Página oficial do hotel</a>' : '') +
         '</div>';
     });
     html += '</div>';
@@ -1777,16 +1807,17 @@
   }
 
   function popupHotel(loc, cenario){
+    var avisoPendente = loc.pendente ? '<span class="aviso-aprox">PENDENTE — hotel ainda não escolhido</span>' : "";
     var avisoAprox = loc.aproximado ? '<span class="aviso-aprox">Localização aproximada — confirmar unidade</span>' : "";
     var noite = "";
     cenario.dias.forEach(function(d){ if(d.pernoite === loc.cidade) noite = d.data; });
     return '<div class="popup-leaflet-custom"><h4>' + loc.nome + '</h4>' +
-      avisoAprox +
+      avisoPendente + avisoAprox +
       '<div>' + loc.endereco + '</div>' +
       '<div><strong>Cidade:</strong> ' + loc.cidade + '</div>' +
       '<div><strong>Noite prevista:</strong> ' + (noite || "conforme circuito do cenário") + '</div>' +
       '<div><strong>Justificativa geográfica:</strong> ' + loc.justificativa + '</div>' +
-      '<a href="' + loc.url + '" target="_blank" rel="noopener noreferrer">Página oficial do hotel</a>' +
+      (loc.url ? '<a href="' + loc.url + '" target="_blank" rel="noopener noreferrer">Página oficial do hotel</a>' : '') +
       '</div>';
   }
 
